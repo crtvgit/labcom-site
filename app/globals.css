@@ -1,0 +1,1300 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ──────────────────────────────────────── */
+:root {
+  --blue-accent: #74a8ed;
+  --blue-light: #afc6e5;
+  --gray-muted: #9d9d9d;
+  --border: #d0d0ce;
+  --off-white: #fafaf8;
+  --page-bg: #F7F6F2;
+  --near-black: #060606;
+  --red-accent: #ed7474;
+  --texture-url: url('/textures/paper.png');
+  /*
+   * Texture tile size — 400px matches the source PNG (400×400 greyscale).
+   * background-blend-mode: multiply blends the grain into the off-white
+   * background-color, making tiling seams invisible at any viewport size.
+   */
+  --texture-size: 400px;
+  /* Header height token — referenced by header CSS, page padding, and scroll-margin */
+  --header-h: 84px;
+}
+
+/* ── Reset / base ────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--page-bg);
+}
+
+body {
+  font-family: var(--font-hanken), "Hanken Grotesk", sans-serif;
+  color: #000;
+  overflow-x: hidden;
+}
+
+/* ── Page texture ────────────────────────────────────────── */
+
+/*
+ * Fine-grain paper tile — the texture repeats in both axes at --texture-size.
+ * Tiling both directions ensures the grain is uniform at any viewport size
+ * and any scroll depth, with no horizontal or vertical seams visible at
+ * the subtle scale we're using.
+ */
+.page-texture {
+  position: relative;
+  background-color: var(--page-bg);
+  background-image: var(--texture-url);
+  background-size: var(--texture-size) var(--texture-size);
+  background-repeat: repeat;
+  background-blend-mode: multiply;
+  min-height: 100dvh;
+}
+
+/*
+ * SVG fractal-noise grain — fixed full-viewport layer at z:9999.
+ * feTurbulence at 0.75 baseFrequency mimics the fine fiber of cotton rag paper.
+ * opacity 0.024 is felt rather than seen — adds analog warmth at close inspection.
+ */
+.page-texture::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.024;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 220px 220px;
+}
+
+/* Notebook-style grid overlaid on texture sections */
+.notebook-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 158px,
+      rgba(140, 140, 140, 0.12) 158px,
+      rgba(140, 140, 140, 0.12) 159px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 158px,
+      rgba(140, 140, 140, 0.1) 158px,
+      rgba(140, 140, 140, 0.1) 159px
+    );
+}
+
+/* ── Content container ───────────────────────────────────── */
+.content-container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(1rem, 5vw, 164px);
+  padding-right: clamp(1rem, 5vw, 162px);
+}
+
+.content-inner {
+  padding-left: clamp(0.5rem, 2vw, 50px);
+  padding-right: clamp(0.5rem, 2vw, 50px);
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.header-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  max-height: var(--header-h);
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  /*
+   * Semi-transparent + backdrop-filter: the page content blurs slightly
+   * behind the header as you scroll, creating the glassmorphism / frosted
+   * paper feel. The texture multiply-blends on top for analog warmth.
+   */
+  background-color: rgba(247, 246, 242, 0.88);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  background-image: var(--texture-url);
+  background-size: var(--texture-size) var(--texture-size);
+  background-repeat: repeat;
+  background-blend-mode: multiply;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-root.open {
+  height: 100dvh;
+  max-height: 100dvh !important;
+  overflow-y: auto;
+  /* Restore bottom border — seals the full-screen curtain */
+  border-bottom: 1px solid var(--border);
+  background-repeat: repeat;
+}
+
+/* Give the nav explicit height so the spacer can push the footer to the bottom */
+.header-root.open .header-nav {
+  height: calc(100dvh - var(--header-h));
+}
+
+.header-top-bar {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 48px);
+  flex-shrink: 0;
+}
+
+.header-logo {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.header-logo img {
+  display: block;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 20px);
+}
+
+/* "Faça as reservas" CTA link — animated underline on hover */
+.header-reserva-link {
+  position: relative;
+  font-size: clamp(12px, 1.2vw, 16px);
+  color: var(--blue-accent);
+  text-decoration: none;
+  white-space: nowrap;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding-bottom: 2px;
+}
+
+.header-reserva-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.header-reserva-arrow {
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-reserva-link::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--blue-accent);
+  transition: width 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-reserva-link:hover::after {
+  width: 100%;
+}
+
+.header-reserva-link:hover .header-reserva-arrow {
+  transform: translateX(4px);
+}
+
+/* Thin vertical separator between link and button */
+.header-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--border);
+  flex-shrink: 0;
+}
+
+/* Hamburger button — rounded hover area */
+.header-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  transition: background-color 0.15s ease;
+}
+
+.header-menu-btn:hover {
+  background-color: rgba(0, 0, 0, 0.055);
+}
+
+.header-menu-btn img {
+  width: 22px;
+  height: auto;
+}
+
+/* ── Expanded nav (curtain) ──────────────────────────────── */
+.header-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 48px);
+}
+
+/* Each nav row — number + label + arrow in a flex row */
+.header-nav-item {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(10px, 1.4vw, 18px);
+  font-size: clamp(30px, 4.6vw, 58px);
+  font-weight: 700;
+  color: #000;
+  text-decoration: none;
+  padding: clamp(14px, 1.8vw, 22px) 0;
+  border-top: 1px solid var(--border);
+  line-height: 1.15;
+  /* Start hidden + shifted down; animate both on open */
+  opacity: 0;
+  transform: translateY(10px);
+  transition: color 0.2s;
+}
+
+/* Ordinal number — small, muted, top-aligned */
+.header-nav-num {
+  font-size: clamp(10px, 1vw, 13px);
+  font-weight: 400;
+  color: var(--gray-muted);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  flex-shrink: 0;
+  /* align to the cap height of the large label */
+  position: relative;
+  top: -0.15em;
+}
+
+/* Label — grows to fill the row */
+.header-nav-label {
+  flex: 1;
+}
+
+/* Arrow — hidden by default, slides in on hover */
+.header-nav-arrow {
+  font-size: clamp(20px, 2.8vw, 38px);
+  font-weight: 300;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition:
+    opacity  0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.header-nav-item:hover .header-nav-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* CTA item — "faça sua reserva" tinted blue */
+.header-nav-item.header-nav-cta {
+  color: var(--blue-accent);
+}
+.header-nav-item.header-nav-cta .header-nav-num {
+  color: var(--blue-light);
+}
+
+.header-root.open .header-nav-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered slide-up + fade for each item */
+.header-nav-item:nth-child(1) {
+  transition: color 0.2s,
+    opacity  0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.07s,
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.07s;
+}
+.header-nav-item:nth-child(2) {
+  transition: color 0.2s,
+    opacity  0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.13s,
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.13s;
+}
+.header-nav-item:nth-child(3) {
+  transition: color 0.2s,
+    opacity  0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.19s,
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.19s;
+}
+.header-nav-item:nth-child(4) {
+  transition: color 0.2s,
+    opacity  0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.25s,
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+}
+
+.header-nav-item:hover {
+  color: var(--blue-accent);
+}
+.header-nav-item.header-nav-cta:hover {
+  color: var(--blue-light);
+}
+
+/* Flexible spacer — pushes the footer bar to the bottom */
+.header-nav-spacer {
+  flex: 1;
+}
+
+/* Footer info bar at the bottom of the open curtain */
+.header-nav-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(12px, 1.4vw, 18px) 0;
+  border-top: 1px solid var(--border);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity  0.28s cubic-bezier(0.22, 1, 0.36, 1) 0.33s,
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1) 0.33s;
+}
+
+.header-root.open .header-nav-footer {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.header-nav-footer-brand {
+  font-size: clamp(11px, 1.1vw, 14px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.header-nav-footer-location {
+  font-size: clamp(10px, 1vw, 13px);
+  font-weight: 400;
+  color: var(--gray-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ── Eyebrow / section label ─────────────────────────────── */
+/*
+ * Small uppercase label that precedes section headings.
+ * Inspired by editorial print typesetting — signals "you are about to read
+ * something important" without competing with the heading itself.
+ */
+.section-eyebrow {
+  font-size: clamp(9px, 0.85vw, 11px);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gray-muted);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+ * Vertical rule accent — the 2 px × 10 px blue sliver anchors the eyebrow
+ * to a spatial coordinate, like a pin on a Bauhaus grid drawing.
+ * text-center eyebrows (ContactSection) inherit this naturally and it reads
+ * as a preceding mark before the centered label.
+ */
+.section-eyebrow::before {
+  content: "";
+  display: block;
+  flex-shrink: 0;
+  width: 2px;
+  height: 10px;
+  background: var(--blue-accent);
+  border-radius: 1px;
+  opacity: 0.7;
+}
+
+/* ── Section bordered boxes ──────────────────────────────── */
+.section-box {
+  background-color: var(--off-white);
+  background-image: var(--texture-url);
+  background-size: var(--texture-size) var(--texture-size);
+  background-repeat: repeat;
+  background-blend-mode: multiply;
+  border: 1px solid var(--border);
+}
+
+.section-box-open-top {
+  border-top: none;
+}
+
+/* ── Space cards ─────────────────────────────────────────── */
+.space-card {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  aspect-ratio: 199 / 270;
+}
+
+.space-card-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 1.25rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.space-card-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.space-card:hover .space-card-image {
+  transform: scale(1.07);
+}
+
+/* ── Stat boxes ──────────────────────────────────────────── */
+.stat-box {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  background-color: var(--off-white);
+  background-image: var(--texture-url);
+  background-size: var(--texture-size) var(--texture-size);
+  background-repeat: repeat;
+  background-blend-mode: multiply;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              transform    0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stat-box:hover {
+  border-color: var(--blue-light);
+  transform: translateY(-2px);
+}
+
+/* ── Smooth scroll ───────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Anchor scroll offset — clears the fixed header (adapts via --header-h) ─ */
+#hero,
+#video,
+#sobre,
+#espacos,
+#calendario,
+#contatos,
+#reserva {
+  scroll-margin-top: calc(var(--header-h) + 9px);
+}
+
+/* ── Triangle decoration ─────────────────────────────────── */
+.triangle-decoration {
+  position: absolute;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BUTTON SYSTEM — professional hover mechanics
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Shine sweep keyframe ────────────────────────────────── */
+@keyframes btn-shine {
+  from { transform: translateX(-120%) skewX(-14deg); }
+  to   { transform: translateX(280%)  skewX(-14deg); }
+}
+
+/*
+ * .btn-dark — filled near-black primary CTA.
+ * Hover: lift 3px, long shadow, shine sweep across the surface.
+ * Active: snap back (fast spring).
+ */
+.btn-dark {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform     0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn-dark::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 38%; height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.11) 50%,
+    transparent 80%
+  );
+  transform: translateX(-120%) skewX(-14deg);
+  pointer-events: none;
+  border-radius: inherit;
+}
+.btn-dark:hover {
+  transform: translateY(-3px);
+}
+.btn-dark:hover::before {
+  animation: btn-shine 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.btn-dark:active {
+  transform: translateY(-1px);
+}
+
+/*
+ * .btn-secondary — red/accent secondary.
+ * Hover: subtle lift + colored shadow + slight brightness.
+ */
+.btn-secondary {
+  position: relative;
+  cursor: pointer;
+  transition:
+    transform     0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    filter        0.24s;
+}
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+/*
+ * .btn-arrow — the arrow/icon span inside a button.
+ * Slides right on parent hover.
+ */
+.btn-arrow {
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn-dark:hover   .btn-arrow { transform: translateX(5px);  }
+.btn-secondary:hover .btn-arrow { transform: translateX(3px); }
+
+/* ── Reserva CTA (CalendarSection dark button) ─────────── */
+.reserva-cta-btn {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform  0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reserva-cta-btn::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 38%; height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.11) 50%,
+    transparent 80%
+  );
+  transform: translateX(-120%) skewX(-14deg);
+  pointer-events: none;
+}
+.reserva-cta-btn:hover {
+  transform: translateY(-3px);
+}
+.reserva-cta-btn:hover::before {
+  animation: btn-shine 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.reserva-cta-btn:active {
+  transform: translateY(-1px);
+}
+
+/* ── Contact email — animated underline ──────────────────── */
+.contact-email-link {
+  position: relative;
+  display: inline-block !important;
+}
+
+.contact-email-link::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--blue-accent);
+  transition: width 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.contact-email-link:hover {
+  color: var(--blue-accent) !important;
+}
+
+.contact-email-link:hover::after {
+  width: 100%;
+}
+
+/* ── Regras button ───────────────────────────────────────── */
+.regras-btn:hover {
+  opacity: 0.85;
+}
+
+/* ── Resource cards (documentos & recursos section) ──────── */
+.resource-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: clamp(16px, 2vw, 24px);
+  border: 1px solid var(--border);
+  background-color: var(--off-white);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform    0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.resource-card:hover {
+  border-color: var(--blue-accent);
+  transform: translateY(-3px);
+}
+
+.resource-card-icon {
+  color: var(--blue-accent);
+  flex-shrink: 0;
+}
+
+.resource-card-title {
+  font-size: clamp(13px, 1.3vw, 16px);
+  font-weight: 600;
+  line-height: 1.3;
+  color: #000;
+}
+
+.resource-card-desc {
+  font-size: clamp(10px, 0.9vw, 12px);
+  font-weight: 400;
+  color: var(--gray-muted);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.resource-card-arrow {
+  font-size: clamp(11px, 1vw, 13px);
+  font-weight: 500;
+  color: var(--blue-accent);
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity  0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.resource-card:hover .resource-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Focus outline ───────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--blue-accent);
+  outline-offset: 2px;
+}
+
+/* ── Selection color ─────────────────────────────────────── */
+::selection {
+  background: var(--blue-accent);
+  color: #fff;
+}
+
+/* ── Reduced motion — disable all transforms/transitions ─── */
+@media (prefers-reduced-motion: reduce) {
+  .space-card-image {
+    transition: none;
+  }
+  .space-card:hover .space-card-image {
+    transform: none;
+  }
+}
+
+/* ── Geometric decoration ────────────────────────────────── */
+/*
+ * Textured Geometry philosophy — slow, orbital, analog-feeling.
+ *
+ * CRITICAL RULE: always use className (not inline `animation:` string)
+ * so keyframes are guaranteed to be in scope at paint time.
+ *
+ * Opacity range: 0.12–0.22 — visible as material texture, not noise.
+ */
+
+/* Keyframes */
+@keyframes geo-spin-cw  { to { transform: rotate(360deg);  } }
+@keyframes geo-spin-ccw { to { transform: rotate(-360deg); } }
+@keyframes geo-float {
+  0%, 100% { transform: translateY(0px);   }
+  50%      { transform: translateY(-18px); }
+}
+@keyframes geo-pulse-ring {
+  0%, 100% { opacity: 0.10; transform: scale(1);    }
+  50%      { opacity: 0.18; transform: scale(1.04); }
+}
+@keyframes geo-drift {
+  0%   { transform: translate(0px,  0px); }
+  33%  { transform: translate(6px, -8px); }
+  66%  { transform: translate(-3px, 5px); }
+  100% { transform: translate(0px,  0px); }
+}
+
+/* Animation utility classes — applied via className on SVG wrappers */
+.geo-spin-cw  {
+  animation: geo-spin-cw  32s linear infinite;
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+}
+.geo-spin-ccw {
+  animation: geo-spin-ccw 26s linear infinite;
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+}
+.geo-float {
+  animation: geo-float 18s ease-in-out infinite;
+}
+.geo-drift {
+  animation: geo-drift 22s ease-in-out infinite;
+}
+/* Pulse rings — applied to individual <circle> elements */
+.geo-pr-1 { animation: geo-pulse-ring  8s ease-in-out        infinite; }
+.geo-pr-2 { animation: geo-pulse-ring  8s ease-in-out   2.5s infinite; }
+.geo-pr-3 { animation: geo-pulse-ring  8s ease-in-out   5.0s infinite; }
+
+/* Base opacity for each decoration type */
+.geo-ring      { opacity: 0.16; }
+.geo-dots      { opacity: 0.18; }
+.geo-rect      { opacity: 0.14; }
+.geo-ring-bg   { opacity: 0.12; }
+
+@media (prefers-reduced-motion: reduce) {
+  .geo-spin-cw, .geo-spin-ccw, .geo-float, .geo-drift,
+  .geo-pr-1, .geo-pr-2, .geo-pr-3 {
+    animation: none !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   CSS ANIMATION SYSTEM (replaces framer-motion)
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Page fade-in (template.tsx — plays on every navigation) ── */
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.page-enter {
+  animation: page-fade-in 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Hero entrance (always plays on mount, no observer needed) ── */
+@keyframes hero-entrance {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+.hero-item {
+  animation: hero-entrance 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-item:nth-child(1) { animation-delay: 0.15s; }
+.hero-item:nth-child(2) { animation-delay: 0.27s; }
+.hero-item:nth-child(3) { animation-delay: 0.39s; }
+.hero-item:nth-child(4) { animation-delay: 0.51s; }
+
+/* ── Header logo slide-down (plays on mount) ── */
+@keyframes header-slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+.header-logo-anim {
+  animation: header-slide-down 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+.header-right-anim {
+  animation: header-slide-down 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+/* ── Scroll-triggered animations (IntersectionObserver adds .in-view) ── */
+
+[data-anim="fade-up"] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity  0.62s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-anim="fade"] {
+  opacity: 0;
+  transition: opacity 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-anim="scale-up"] {
+  opacity: 0;
+  transform: translateY(22px) scale(0.97);
+  transition:
+    opacity  0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-anim="slide-left"] {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition:
+    opacity  0.58s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Visible state — added by useInView hook */
+[data-anim].in-view {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger transition delays */
+[data-delay="1"] { transition-delay: 0.06s; }
+[data-delay="2"] { transition-delay: 0.12s; }
+[data-delay="3"] { transition-delay: 0.18s; }
+[data-delay="4"] { transition-delay: 0.24s; }
+[data-delay="5"] { transition-delay: 0.30s; }
+[data-delay="6"] { transition-delay: 0.36s; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-anim] {
+    transition: none;
+    animation: none;
+  }
+  [data-anim].in-view,
+  .hero-item,
+  .page-enter {
+    opacity: 1;
+    transform: none;
+  }
+  .not-found-anim {
+    animation: none;
+    opacity: 1;
+  }
+  /* Stop all geometric decoration animations */
+  .geo-decor * {
+    animation: none !important;
+  }
+}
+
+/* ── Touch / tap optimizations ──────────────────────────────── */
+/*
+ * -webkit-tap-highlight-color: transparent — removes the default grey flash
+ * iOS and Android apply on tap.
+ * touch-action: manipulation — eliminates the 300 ms double-tap delay without
+ * requiring any JS library.
+ */
+a,
+button,
+[role="button"],
+[role="tab"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ── Calendar: desktop embed vs mobile link selector ──────── */
+.calendar-desktop-view {
+  display: block;
+}
+
+.calendar-mobile-selector {
+  display: none;
+}
+
+/* ── Calendar mobile selector components ────────────────────── */
+
+/* Tab strip */
+.cal-sel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Individual selector tab */
+.cal-sel-tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 16px 8px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-muted);
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1;
+  transition: color 0.18s, border-color 0.18s;
+}
+
+.cal-sel-tab-btn[aria-selected="true"] {
+  color: var(--blue-accent);
+  border-bottom-color: var(--blue-accent);
+  font-weight: 600;
+}
+
+/* Panel body below the tabs */
+.cal-sel-panel {
+  overflow: hidden;
+  background-color: var(--off-white);
+  background-image: var(--texture-url);
+  background-size: var(--texture-size) var(--texture-size);
+  background-repeat: repeat;
+  background-blend-mode: multiply;
+}
+
+/* Blue gradient accent stripe — mirrors ReservaContent */
+.cal-sel-stripe {
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue-accent) 0%, var(--blue-light) 100%);
+}
+
+/* Centred content layout */
+.cal-sel-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 24px 32px;
+  gap: 16px;
+}
+
+/* "Abrir calendário" CTA — mirrors ReservaContent's dark button */
+.cal-sel-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--near-black);
+  color: var(--off-white);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  padding: 16px 28px;
+  border-radius: 4px;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: opacity 0.2s;
+  margin-top: 4px;
+}
+
+.cal-sel-cta:active {
+  opacity: 0.72;
+}
+
+/* ── Calendar iframe wrapper ─────────────────────────────── */
+/*
+ * Used by the desktop view only. Height stays as the original clamp value;
+ * on mobile the entire desktop view is hidden, so no override needed.
+ */
+.calendar-iframe-wrapper {
+  position: relative;
+  width: 100%;
+  height: clamp(480px, 55vw, 720px);
+  overflow: hidden;
+}
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE  ≤ 767 px
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+  /* ── Tokens: shorter header + safe-area awareness ───────── */
+  :root {
+    /*
+     * --header-h drives paddingTop on <main>, scroll-margin-top, and
+     * the curtain nav height.  On iPhones with a Dynamic Island or notch,
+     * env(safe-area-inset-top) adds the OS chrome height so content is
+     * never occluded.  Devices without a safe area resolve to 0px.
+     */
+    --header-h: calc(58px + env(safe-area-inset-top, 0px));
+  }
+
+  /* ── Header ─────────────────────────────────────────────── */
+
+  /*
+   * Push the header's background behind the system status bar.
+   * The visual top-bar (58 px) starts right below the OS chrome.
+   */
+  .header-root {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Keep the visual top bar at 58 px — separate from the safe-area padding */
+  .header-top-bar {
+    height: 58px;
+  }
+
+  /* Shortcut CTA in the top bar is redundant — the curtain nav covers it */
+  .header-reserva-link,
+  .header-divider {
+    display: none;
+  }
+
+  /* Larger, easier-to-read nav items in the curtain */
+  .header-nav-item {
+    font-size: clamp(28px, 9vw, 40px);
+    padding: clamp(14px, 4vw, 20px) 0;
+  }
+
+  /* Footer info bar: stack + safe-area bottom for the iPhone home indicator */
+  .header-nav-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+
+  /* ── Hero ───────────────────────────────────────────────── */
+
+  /*
+   * Desktop layout uses absolute positioning pinned to percentage coords
+   * on a 954:351 aspect-ratio container. On a 375 px phone that shrinks the
+   * box to ~100 px tall and makes the tagline 9 px — unreadable.
+   *
+   * Solution: convert to a centred flex column.  Each element exits absolute
+   * flow, stacks naturally, and scales to comfortable sizes.
+   */
+  .hero-layout {
+    aspect-ratio: unset !important;
+    padding: clamp(28px, 7vw, 40px) clamp(20px, 5vw, 32px);
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* All hero children leave absolute flow */
+  .hero-layout .hero-item {
+    position: static !important;
+    width: auto !important;
+  }
+
+  /* UCB text logo */
+  .hero-layout .hero-ucb-text-wrap img {
+    width: min(60%, 220px);
+    margin: 0 auto;
+    display: block;
+  }
+
+  /* Chevron is a decorative glyph — drop it on mobile */
+  .hero-layout .hero-chevron-wrap {
+    display: none;
+  }
+
+  /* LAB.COM wordmark */
+  .hero-layout .hero-wordmark-wrap img {
+    width: min(74%, 260px);
+    margin: 0 auto;
+    display: block;
+  }
+
+  /* Tagline: the inline clamp(9px,1.5vw,20px) bottoms out at 9 px on phones */
+  .hero-layout .hero-tagline-wrap p {
+    font-size: 13px !important;
+    text-align: center !important;
+  }
+
+  /* ── About — stats grid fills full width ─────────────────── */
+  .about-stats-grid {
+    width: 100% !important;
+  }
+
+  /* ── Space cards — slightly squarer, text stays readable ─── */
+  .space-card {
+    aspect-ratio: 3 / 4;
+  }
+
+  /* ── Resource cards — arrow always visible (touch, no hover) ─ */
+  .resource-card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* ── Calendar — show mobile selector, hide desktop embed ─── */
+  /*
+   * The Outlook iframe is not touch-friendly on narrow screens.
+   * On mobile the entire desktop embed is replaced by a native-feeling
+   * selector that opens the chosen calendar in a new browser tab.
+   */
+  .calendar-desktop-view {
+    display: none;
+  }
+
+  .calendar-mobile-selector {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Footer — auto height so copyright text wraps freely ─── */
+  footer {
+    height: auto !important;
+    overflow: visible !important;
+    min-height: 80px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+}
+
+/* ── 404 page animations ─────────────────────────────────── */
+
+/*
+ * Staggered entrance for not-found elements.
+ * Each element uses animationDelay inline to stagger the sequence.
+ * The animation slides up 18 px while fading in — editorial, understated.
+ */
+@keyframes not-found-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.not-found-anim {
+  opacity: 0;
+  animation: not-found-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.not-found-cta:hover {
+  opacity: 0.82;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MOTION LIBRARY ENHANCEMENTS
+   Flat design: transforms + color changes, never box-shadow
+   ══════════════════════════════════════════════════════════ */
+
+/* Space cards 3D tilt — perspective on parent */
+.space-card-tilt-wrapper {
+  perspective: 800px;
+  perspective-origin: center center;
+}
+
+/* Spotlight card — overflow hidden for the glow layer */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Spotlight radial layer — absolutely fills the card */
+.spotlight-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+  transition: opacity 0.3s;
+}
+
+/* Animated border-trace for section boxes */
+@keyframes border-trace-h {
+  from { transform: scaleX(0); transform-origin: left center; }
+  to   { transform: scaleX(1); transform-origin: left center; }
+}
+@keyframes border-trace-v {
+  from { transform: scaleY(0); transform-origin: top center; }
+  to   { transform: scaleY(1); transform-origin: top center; }
+}
+
+/* Dot-grid wave animation — for CalendarSection dot matrix */
+@keyframes dot-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Hero ring continuous pulse */
+@keyframes geo-pulse-slow {
+  0%, 100% { opacity: 0.12; }
+  50%       { opacity: 0.22; }
+}
+
+/* Shimmer across any element */
+@keyframes shimmer-sweep {
+  from { background-position: -200% center; }
+  to   { background-position: 200% center; }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--near-black) 0%,
+    var(--blue-accent) 40%,
+    var(--near-black) 60%,
+    var(--near-black) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Magnetic button cursor hint */
+.magnetic {
+  cursor: pointer;
+  will-change: transform;
+}
+
+/* Card tilt — disable on touch */
+@media (hover: none) {
+  .space-card-tilt-wrapper {
+    perspective: none;
+  }
+}
+
+/* Reduce motion — kill all motion animations */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-text {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: var(--near-black);
+  }
+}
+

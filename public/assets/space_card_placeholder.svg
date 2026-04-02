@@ -1,0 +1,10 @@
+<svg width="199" height="270" viewBox="0 0 199 270" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="199" height="270" fill="#D0CABB"/>
+  <rect x="0" y="0" width="199" height="270" fill="url(#checker)"/>
+  <defs>
+    <pattern id="checker" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="10" height="10" fill="rgba(0,0,0,0.06)"/>
+      <rect x="10" y="10" width="10" height="10" fill="rgba(0,0,0,0.06)"/>
+    </pattern>
+  </defs>
+</svg>

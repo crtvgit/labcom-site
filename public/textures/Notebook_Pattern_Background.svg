@@ -1,0 +1,17 @@
+<svg width="1280" height="1086" viewBox="0 0 1280 1086" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <line x1="77.5"   y1="1086" x2="77.5"   y2="0" stroke="#CCCCCC" stroke-width="0.6" stroke-dasharray="10 10"/>
+  <line x1="236.5"  y1="1086" x2="236.5"  y2="0" stroke="#CCCCCC" stroke-width="0.6" stroke-dasharray="10 10"/>
+  <line x1="395.5"  y1="1086" x2="395.5"  y2="0" stroke="#CCCCCC" stroke-width="0.6" stroke-dasharray="10 10"/>
+  <line x1="554.5"  y1="1086" x2="554.5"  y2="0" stroke="#CCCCCC" stroke-width="0.6" stroke-dasharray="10 10"/>
+  <line x1="713.5"  y1="1086" x2="713.5"  y2="0" stroke="#CCCCCC" stroke-width="0.6" stroke-dasharray="10 10"/>
+  <line x1="872.5"  y1="1086" x2="872.5"  y2="0" stroke="#CCCCCC" stroke-width="0.6" stroke-dasharray="10 10"/>
+  <line x1="1031.5" y1="1086" x2="1031.5" y2="0" stroke="#CCCCCC" stroke-width="0.6" stroke-dasharray="10 10"/>
+  <line x1="1190.5" y1="1086" x2="1190.5" y2="0" stroke="#CCCCCC" stroke-width="0.6" stroke-dasharray="10 10"/>
+  <line x1="1280" y1="1020" x2="0" y2="1020" stroke="#CCCCCC" stroke-width="0.5" stroke-dasharray="2 2"/>
+  <line x1="1280" y1="861"  x2="0" y2="861"  stroke="#CCCCCC" stroke-width="0.5"/>
+  <line x1="1280" y1="702"  x2="0" y2="702"  stroke="#CCCCCC" stroke-width="0.5"/>
+  <line x1="1280" y1="543"  x2="0" y2="543"  stroke="#CCCCCC" stroke-width="0.5"/>
+  <line x1="1280" y1="384"  x2="0" y2="384"  stroke="#CCCCCC" stroke-width="0.5"/>
+  <line x1="1280" y1="225"  x2="0" y2="225"  stroke="#CCCCCC" stroke-width="0.5"/>
+  <line x1="1280" y1="66"   x2="0" y2="66"   stroke="#CCCCCC" stroke-width="0.5"/>
+</svg>
