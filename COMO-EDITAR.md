@@ -95,16 +95,24 @@ Para **trocar a foto de um espaço**: coloque a imagem na pasta
 
 ## 📅 Mudar os calendários
 
-Procure por **`calendarios`**. Cada calendário tem `nome`, `descricao` e `url`.
+O calendário aparece **dentro do site** (a grade do mês é desenhada na própria
+página, sem abrir aba). Procure por **`calendarios`**. Cada calendário tem:
 
-> ⚠️ **Importante:** a Microsoft **não permite mais** mostrar o calendário do
-> Outlook embutido dentro do site (bloqueio de segurança). Por isso, cada
-> calendário agora abre em uma **nova aba** quando clicado. Isso é o esperado —
-> não é um defeito do site.
+```ts
+{
+  chave: "crtv",            // identificador curto, sem espaços
+  nome: "CRTV",             // nome que aparece na aba
+  descricao: "…",           // texto curto
+  ics: "https://outlook.office365.com/owa/calendar/.../calendar.ics",
+},
+```
 
-Para pegar o link de um calendário publicado: no Outlook, vá em
+Para pegar o link **`.ics`** de um calendário: no Outlook, vá em
 **Calendário → (botão direito no calendário) → Compartilhar e permissões →
-Publicar calendário** e copie o link que termina em `calendar.html`.
+Publicar calendário** e copie o link **ICS** (termina em `calendar.ics`).
+
+> 💡 Use sempre o link que termina em **`.ics`** (não o `.html`). É ele que
+> permite mostrar o calendário embutido na página.
 
 ---
 

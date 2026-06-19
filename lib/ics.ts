@@ -20,6 +20,8 @@
 export type IcsEvent = {
   title: string;
   location: string;
+  /** Descrição completa do evento (pode ter várias linhas) */
+  description: string;
   /** ISO 8601 com fuso (ex.: "2026-03-17T14:00:00-03:00") */
   start: string;
   /** ISO 8601 com fuso */
@@ -41,13 +43,30 @@ function unfold(raw: string): string[] {
   return out;
 }
 
-/** Remove escapes do texto ICS (\\, \, \; \n). */
+/** Remove escapes do texto ICS (\\, \, \; \n) — quebras viram espaço. */
 function unescapeText(v: string): string {
   return v
     .replace(/\\n/gi, " ")
     .replace(/\\,/g, ",")
     .replace(/\\;/g, ";")
     .replace(/\\\\/g, "\\")
+    .trim();
+}
+
+/**
+ * Limpa a DESCRIPTION para exibição:
+ *  - mantém as quebras de linha reais (\n)
+ *  - remove a marcação "<mailto:...>" que o Outlook insere após menções
+ *  - colapsa 3+ linhas em branco em no máximo 2
+ */
+function cleanDescription(v: string): string {
+  return v
+    .replace(/\\n/gi, "\n")
+    .replace(/\\,/g, ",")
+    .replace(/\\;/g, ";")
+    .replace(/\\\\/g, "\\")
+    .replace(/<mailto:[^>]*>/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -109,6 +128,7 @@ export function parseIcs(text: string): IcsEvent[] {
         events.push({
           title: cur.title,
           location: cur.location || "",
+          description: cur.description || "",
           start: cur.start,
           end: cur.end,
           allDay: !!cur._startAllDay,
@@ -124,6 +144,7 @@ export function parseIcs(text: string): IcsEvent[] {
 
     if (name === "SUMMARY") cur.title = unescapeText(value);
     else if (name === "LOCATION") cur.location = unescapeText(value);
+    else if (name === "DESCRIPTION") cur.description = cleanDescription(value);
     else if (name === "DTSTART") {
       const { iso, allDay } = toISO(value, hasTzid);
       cur.start = iso;

@@ -12,8 +12,10 @@ import { NextResponse } from "next/server";
 import { siteConfig } from "@/lib/siteConfig";
 import { parseIcs } from "@/lib/ics";
 
-// Revalida o cache a cada 5 minutos — equilibra atualização e desempenho.
-export const revalidate = 300;
+// SEMPRE ao vivo: cada requisição busca o calendário direto do Outlook,
+// para nunca ficar desatualizado.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(
   _req: Request,
@@ -37,7 +39,8 @@ export async function GET(
           "Mozilla/5.0 (compatible; LABCOM-site/1.0; +https://labcom.ucb.br)",
         Accept: "text/calendar, text/plain, */*",
       },
-      next: { revalidate },
+      // Sempre buscar a versão mais recente do Outlook.
+      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -54,9 +57,8 @@ export async function GET(
       { calendar: cal.nome, events },
       {
         headers: {
-          // Cache na CDN: serve rápido e atualiza em segundo plano.
-          "Cache-Control":
-            "public, s-maxage=300, stale-while-revalidate=600",
+          // Nunca armazenar em cache — o calendário deve refletir o Outlook agora.
+          "Cache-Control": "no-store, max-age=0, must-revalidate",
         },
       }
     );
