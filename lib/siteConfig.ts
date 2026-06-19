@@ -207,33 +207,41 @@ export const siteConfig = {
    *  📅  CALENDÁRIOS  (seção "calendário de reservas")
    * ──────────────────────────────────────────────────────────────────────
    *
-   *  IMPORTANTE: a Microsoft NÃO permite mais exibir o calendário do Outlook
-   *  "embutido" dentro de outro site (bloqueio de segurança X-Frame-Options).
-   *  Por isso, cada calendário abre em uma nova aba ao ser clicado.
+   *  O calendário é exibido DENTRO do site (sem abrir aba). Para isso usamos
+   *  o link de PUBLICAÇÃO que termina em "calendar.ics".
    *
-   *  Para pegar o link de um calendário:
+   *  Como obter o link ".ics":
    *    Outlook → Calendário → botão direito no calendário → "Compartilhar e
-   *    permissões" → "Publicar calendário" → copie o link que termina em
-   *    "calendar.html".
+   *    permissões" → "Publicar calendário" → copie o link **ICS**
+   *    (termina em "calendar.ics").
+   *
+   *  Campos:
+   *    chave     → identificador curto, sem espaços (usado internamente)
+   *    nome      → nome exibido na aba
+   *    descricao → texto curto de apoio
+   *    ics       → link de publicação que termina em "calendar.ics"
    */
   calendarios: [
     {
+      chave: "crtv",
       nome: "CRTV",
       descricao:
         "Estúdio de TV com chroma key, ilhas de edição e teleprompter.",
-      url: "https://outlook.office365.com/calendar/published/04377dd3fc844e2c8ffa40794bc40ba7@ucb.br/c0b7f0e5d28f4128bcec9f53b09845d38669094876541354230/calendar.html",
+      ics: "https://outlook.office365.com/owa/calendar/04377dd3fc844e2c8ffa40794bc40ba7@ucb.br/c0b7f0e5d28f4128bcec9f53b09845d38669094876541354230/calendar.ics",
     },
     {
+      chave: "radio",
       nome: "Rádio",
       descricao:
         "Estúdio de rádio e podcast com microfones e mesa de áudio.",
-      url: "https://outlook.office365.com/calendar/published/04377dd3fc844e2c8ffa40794bc40ba7@ucb.br/3eb6c8664aad41338cfcf874e11a56ef2062506675193543890/calendar.html",
+      ics: "https://outlook.office365.com/owa/calendar/04377dd3fc844e2c8ffa40794bc40ba7@ucb.br/3eb6c8664aad41338cfcf874e11a56ef2062506675193543890/calendar.ics",
     },
     {
+      chave: "nfoto",
       nome: "N.FOTO",
       descricao:
         "Núcleo de fotografia com cicloramas e iluminação profissional.",
-      url: "https://outlook.office365.com/calendar/published/04377dd3fc844e2c8ffa40794bc40ba7@ucb.br/284732e24f574089b47433db68a2cb0710490216399718100738/calendar.html",
+      ics: "https://outlook.office365.com/owa/calendar/04377dd3fc844e2c8ffa40794bc40ba7@ucb.br/284732e24f574089b47433db68a2cb0710490216399718100738/calendar.ics",
     },
   ],
 } as const;

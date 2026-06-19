@@ -1520,107 +1520,293 @@ button,
 }
 
 /* ════════════════════════════════════════════════════════════
-   CALENDÁRIOS — cartões de acesso (CalendarEmbed)
+   CALENDÁRIO INLINE (CalendarEmbed) — grade do mês desenhada no site
    Conteúdo editável em: lib/siteConfig.ts → calendarios
    ════════════════════════════════════════════════════════════ */
 
-.cal-cards-wrap {
-  padding: clamp(20px, 2.4vw, 32px);
+.cal2 {
+  background-color: var(--off-white);
 }
 
-.cal-cards-note {
-  margin: 0 0 clamp(16px, 2vw, 24px);
-  font-size: clamp(13px, 1.2vw, 15px);
-  line-height: 1.5;
-  color: var(--gray-muted);
-  max-width: 60ch;
-}
-
-.cal-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(12px, 1.6vw, 18px);
-  margin: 0;
-  padding: 0;
-}
-
-.cal-card {
-  position: relative;
+/* ── Abas de calendário ── */
+.cal2-tabs {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  height: 100%;
-  padding: clamp(20px, 2.2vw, 28px);
-  padding-top: clamp(24px, 2.6vw, 32px);
+  border-bottom: 1px solid var(--border);
+}
+
+.cal2-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: clamp(12px, 1.4vw, 16px) 8px;
+  font-size: clamp(11px, 1vw, 13px);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-muted);
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1;
+  transition: color 0.18s, border-color 0.18s;
+}
+
+.cal2-tab[aria-selected="true"] {
+  color: var(--blue-accent);
+  border-bottom-color: var(--blue-accent);
+  font-weight: 600;
+}
+
+/* ── Barra do mês ── */
+.cal2-monthbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vw, 36px);
+  padding: clamp(14px, 1.8vw, 20px);
+}
+
+.cal2-monthlabel {
+  font-size: clamp(15px, 1.7vw, 20px);
+  font-weight: 700;
+  text-transform: capitalize;
+  min-width: 9ch;
+  text-align: center;
+}
+
+.cal2-navbtn {
+  width: 38px;
+  height: 38px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background-color: var(--page-bg);
-  text-decoration: none;
-  color: inherit;
-  overflow: hidden;
-  transition:
-    border-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-    transform    0.22s cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 0.22s ease;
+  background: var(--page-bg);
+  color: var(--near-black);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.18s, background-color 0.18s, transform 0.18s;
 }
 
-.cal-card:hover {
+.cal2-navbtn:hover {
   border-color: var(--blue-accent);
-  background-color: var(--off-white);
-  transform: translateY(-3px);
-}
-
-.cal-card-stripe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--blue-accent) 0%, var(--blue-light) 100%);
-}
-
-.cal-card-icon {
-  display: flex;
-  line-height: 0;
-}
-
-.cal-card-title {
-  font-size: clamp(17px, 1.8vw, 22px);
-  font-weight: 700;
   color: var(--blue-accent);
-  line-height: 1.2;
-  margin: 0;
+  transform: translateY(-1px);
 }
 
-.cal-card-desc {
-  font-size: clamp(12px, 1.05vw, 14px);
-  font-weight: 400;
+/* ── Estados de carregamento / erro ── */
+.cal2-state {
+  padding: clamp(40px, 8vw, 80px) 24px;
+  text-align: center;
+  font-size: clamp(13px, 1.2vw, 15px);
   color: var(--gray-muted);
-  line-height: 1.5;
-  margin: 0;
-  flex: 1;
+}
+.cal2-state-error a {
+  color: var(--blue-accent);
+  font-weight: 600;
 }
 
-.cal-card-cta {
+/* ── Grade do mês ── */
+.cal2-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.cal2-weekday {
+  padding: 8px 4px;
+  text-align: center;
+  font-size: clamp(9px, 0.85vw, 11px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-muted);
+  background: var(--page-bg);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.cal2-cell {
+  position: relative;
+  min-width: 0;
+  min-height: clamp(64px, 9vw, 104px);
+  padding: 5px 5px 4px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--off-white);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: background-color 0.15s;
+}
+
+.cal2-cell-empty {
+  background: var(--page-bg);
+  cursor: default;
+}
+
+.cal2-cell.cal2-has:hover {
+  background: var(--page-bg);
+}
+
+.cal2-cell.cal2-selected {
+  outline: 2px solid var(--blue-accent);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.cal2-daynum {
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 600;
+  color: var(--near-black);
+  width: 1.9em;
+  height: 1.9em;
   display: inline-flex;
   align-items: center;
-  margin-top: 6px;
-  font-size: clamp(13px, 1.2vw, 15px);
-  font-weight: 600;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cal2-today .cal2-daynum {
+  background: var(--blue-accent);
+  color: #fff;
+}
+
+/* Chips de evento (desktop) */
+.cal2-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.cal2-chip {
+  font-size: clamp(9px, 0.8vw, 11px);
+  line-height: 1.3;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(47, 111, 209, 0.1);
   color: var(--blue-accent);
-  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
+.cal2-chip-time {
+  font-weight: 700;
+}
+
+.cal2-more {
+  font-size: clamp(9px, 0.8vw, 10px);
+  font-weight: 600;
+  color: var(--gray-muted);
+  padding-left: 4px;
+}
+
+/* Ponto com contagem (mobile) */
+.cal2-dot {
+  display: none;
+}
+
+/* ── Reservas do dia ── */
+.cal2-day {
+  padding: clamp(18px, 2.4vw, 28px);
+}
+
+.cal2-day-title {
+  font-size: clamp(14px, 1.5vw, 18px);
+  font-weight: 700;
+  color: var(--blue-accent);
+  margin: 0 0 clamp(12px, 1.6vw, 18px);
+  text-transform: capitalize;
+}
+
+.cal2-day-empty {
+  font-size: clamp(12px, 1.2vw, 14px);
+  color: var(--gray-muted);
+  margin: 0;
+}
+
+.cal2-day-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cal2-event {
+  display: flex;
+  gap: clamp(12px, 1.6vw, 18px);
+  padding: clamp(10px, 1.2vw, 14px);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blue-accent);
+  border-radius: 6px;
+  background: var(--page-bg);
+}
+
+.cal2-event-time {
+  flex-shrink: 0;
+  font-size: clamp(12px, 1.2vw, 14px);
+  font-weight: 700;
+  color: var(--near-black);
+  min-width: 11ch;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal2-event-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cal2-event-title {
+  font-size: clamp(12px, 1.2vw, 14px);
+  font-weight: 600;
+  color: var(--near-black);
+  line-height: 1.35;
+}
+
+.cal2-event-loc {
+  font-size: clamp(10px, 1vw, 12px);
+  color: var(--gray-muted);
+  line-height: 1.3;
+}
+
+/* ── Mobile: grade compacta com ponto de contagem ── */
 @media (max-width: 767px) {
-  .cal-cards-grid {
-    grid-template-columns: 1fr;
+  .cal2-chips {
+    display: none;
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cal-card:hover {
-    transform: none;
+  .cal2-cell {
+    min-height: 52px;
+    align-items: center;
+    gap: 4px;
+  }
+  .cal2-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--blue-accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .cal2-event {
+    flex-direction: column;
+    gap: 4px;
   }
 }
 
