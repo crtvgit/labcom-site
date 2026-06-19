@@ -7,39 +7,18 @@ import {
   useSpring,
   useTransform,
   useInView as useMotionInView,
+  useReducedMotion,
 } from "motion/react";
 import { SPACE_CARD_BG, ICON_USER } from "@/lib/assets";
+import { siteConfig } from "@/lib/siteConfig";
 
-const SPACES = [
-  {
-    name: "Estúdio de Fotografia",
-    description:
-      "Espaço equipado com iluminação profissional, cicloramas e câmeras DSLR",
-    capacity: "25",
-    image: "/espacos/fotografia.png"
-  },
-  {
-    name: "Estúdio de Rádio",
-    description:
-      "Espaço perfeito para gravações de podcast e mesacasts, contando com microfones profissionais, mesa de áudio e televisões.",
-    capacity: "10",
-    image: "/espacos/radio.png"
-  },
-  {
-    name: "CRTV",
-    description:
-      "Espaço equipado com ilhas de edição, dois estúdios com chroma key, câmeras e teleprompter",
-    capacity: "35",
-    image: "/espacos/crtv.png"
-  },
-  {
-    name: "Laboratório de Com.",
-    description:
-      "Espaço equipado com computadores de informática preparados e com equipamentos para edição de foto e de vídeo.",
-    capacity: "40",
-    image: "/espacos/lab_com.png"
-  },
-];
+// Espaços editáveis em: lib/siteConfig.ts → espacos
+const SPACES = siteConfig.espacos.map((e) => ({
+  name: e.nome,
+  description: e.descricao,
+  capacity: e.capacidade,
+  image: e.imagem,
+}));
 
 /** 3-D perspective tilt card — spring-physics on mouse move. */
 function TiltCard({
@@ -52,6 +31,7 @@ function TiltCard({
   isInView: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
 
   const rawX = useMotionValue(0.5);
   const rawY = useMotionValue(0.5);
@@ -90,21 +70,21 @@ function TiltCard({
       <motion.div
         ref={cardRef}
         className="space-card"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
+        onMouseMove={reduce ? undefined : handleMouseMove}
+        onMouseLeave={reduce ? undefined : handleMouseLeave}
         style={{
-          rotateX: springRotX,
-          rotateY: springRotY,
+          rotateX: reduce ? 0 : springRotX,
+          rotateY: reduce ? 0 : springRotY,
           transformStyle: "preserve-3d",
         }}
-        whileTap={{ scale: 0.97 }}
+        whileTap={reduce ? undefined : { scale: 0.97 }}
       >
         <motion.img
           src={space.image || SPACE_CARD_BG}
           alt=""
           aria-hidden
           className="space-card-image"
-          style={{ scale: imgScale }}
+          style={{ scale: reduce ? 1 : imgScale }}
         />
         <div
           className="absolute inset-0"

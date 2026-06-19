@@ -1,8 +1,9 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NotebookBackground from "@/components/NotebookBackground";
+import ReservationNotice from "@/components/ReservationNotice";
 import HeroSection from "@/components/sections/HeroSection";
-import VideoSection from "@/components/sections/VideoSection";
+import IntroSection from "@/components/sections/IntroSection";
 import AboutSpacesGroup from "@/components/AboutSpacesGroup";
 import ResourcesSection from "@/components/sections/ResourcesSection";
 import CalendarSection from "@/components/sections/CalendarSection";
@@ -14,7 +15,10 @@ export default function HomePage() {
     <>
       <Header />
 
-      <main style={{ position: "relative", paddingTop: "var(--header-h)" }}>
+      <main id="conteudo" style={{ position: "relative", paddingTop: "var(--header-h)" }}>
+        {/* ── Aviso de reservas bloqueadas (tarja vermelha — liga/desliga em lib/siteConfig.ts) ── */}
+        <ReservationNotice />
+
         {/* ── Page decorations (z:0, behind all content) ── */}
         <NotebookBackground />
 
@@ -62,7 +66,7 @@ export default function HomePage() {
                 }}
               >
                 <HeroSection />
-                <VideoSection />
+                <IntroSection />
               </div>
             </div>
           </div>

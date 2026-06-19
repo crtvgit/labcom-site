@@ -85,6 +85,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={hanken.variable}>
       <body className="page-texture">
+        {/* Link de acessibilidade — visível ao navegar por teclado (Tab) */}
+        <a href="#conteudo" className="skip-link">
+          Pular para o conteúdo
+        </a>
         <ScrollProgress />
         {children}
       </body>

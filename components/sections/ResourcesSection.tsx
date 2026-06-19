@@ -6,28 +6,17 @@ import {
   useMotionValue,
   useMotionTemplate,
   useInView as useMotionInView,
+  useReducedMotion,
 } from "motion/react";
+import { siteConfig } from "@/lib/siteConfig";
 
-const RESOURCES = [
-  {
-    title: "Catálogo de Equipamentos",
-    desc: "Lista completa dos equipamentos disponíveis para reserva no LAB.COM",
-    href: "https://ubecedu.sharepoint.com/:l:/s/Klabs2/JAAOJ-dLd2KBRotuVNM0OyLsAdf4mzK6f3JoMac7wJS_fGI?e=v3b0Ns",
-    tag: "sharepoint",
-  },
-  {
-    title: "Kits de Equipamentos",
-    desc: "Conjuntos de equipamentos organizados por tipo de produção",
-    href: "https://ubecedu.sharepoint.com/:l:/s/Klabs2/JABb3_5cQw-RTroMk6XURzHoAYDyVhc5eKFqPtqq88OsycY?e=K9hg4X",
-    tag: "sharepoint",
-  },
-  {
-    title: "Regras Vigentes",
-    desc: "Normas regulamentares para uso dos espaços e equipamentos do LAB.COM",
-    href: "https://ubecedu.sharepoint.com/:b:/s/Klabs2/IQBfHHLa250JSJVns4hVXKl7Acq7FjYIcHjn8TOl3fGep6U?e=w2OPt0",
-    tag: "pdf",
-  },
-];
+// Documentos editáveis em: lib/siteConfig.ts → documentos
+const RESOURCES = siteConfig.documentos.map((d) => ({
+  title: d.titulo,
+  desc: d.descricao,
+  href: d.href,
+  tag: d.tipo, // "pdf" ou "lista"
+}));
 
 function DocIcon({ tag }: { tag: string }) {
   return tag === "pdf" ? (
@@ -120,7 +109,8 @@ function SpotlightCard({
         whileHover={{ opacity: 1, x: 0 }}
       >
         <span>abrir</span>
-        <span>→</span>
+        <span aria-hidden>→</span>
+        <span className="sr-only"> (abre em nova aba)</span>
       </motion.div>
     </motion.a>
   );
@@ -129,6 +119,7 @@ function SpotlightCard({
 export default function ResourcesSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useMotionInView(sectionRef, { once: true, margin: "-60px 0px" });
+  const reduce = useReducedMotion();
 
   return (
     <motion.section
@@ -157,7 +148,7 @@ export default function ResourcesSection() {
           height: 200,
           pointerEvents: "none",
         }}
-        animate={{ rotate: -360 }}
+        animate={reduce ? undefined : { rotate: -360 }}
         transition={{ duration: 26, ease: "linear", repeat: Infinity }}
       >
         <svg
@@ -186,10 +177,14 @@ export default function ResourcesSection() {
           height: 120,
           pointerEvents: "none",
         }}
-        animate={{
-          rotate: 360,
-          y: [0, -10, 0],
-        }}
+        animate={
+          reduce
+            ? undefined
+            : {
+                rotate: 360,
+                y: [0, -10, 0],
+              }
+        }
         transition={{
           rotate: { duration: 32, ease: "linear", repeat: Infinity },
           y: { duration: 7, ease: "easeInOut", repeat: Infinity },

@@ -1,11 +1,16 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView as useMotionInView } from "motion/react";
+import { motion, useInView as useMotionInView, useReducedMotion } from "motion/react";
+import { siteConfig } from "@/lib/siteConfig";
+
+// Contatos editáveis em: lib/siteConfig.ts → contato
+const { email, telefone, horarios } = siteConfig.contato;
 
 export default function ContactSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useMotionInView(sectionRef, { once: true, margin: "-60px 0px" });
+  const reduce = useReducedMotion();
 
   return (
     <section
@@ -59,7 +64,7 @@ export default function ContactSection() {
             pointerEvents: "none",
             zIndex: 2,
           }}
-          animate={{ rotate: 360 }}
+          animate={reduce ? undefined : { rotate: 360 }}
           transition={{ duration: 50, ease: "linear", repeat: Infinity }}
         >
           <svg viewBox="0 0 200 200" fill="none"
@@ -128,7 +133,7 @@ export default function ContactSection() {
                 <path d="M2 7l8 5 8-5" stroke="#74a8ed" strokeWidth="1.3" strokeLinecap="round" />
               </motion.svg>
               <motion.a
-                href="mailto:crtv@ucb.br"
+                href={`mailto:${email}`}
                 className="contact-email-link"
                 whileHover={{ x: 3 }}
                 transition={{ type: "spring", stiffness: 400, damping: 26 }}
@@ -142,7 +147,7 @@ export default function ContactSection() {
                   transition: "color 0.2s",
                 }}
               >
-                crtv@ucb.br
+                {email}
               </motion.a>
             </div>
 
@@ -170,7 +175,7 @@ export default function ContactSection() {
                   cursor: "default",
                 }}
               >
-                3356-9226
+                {telefone}
               </motion.p>
             </div>
           </motion.div>
@@ -193,7 +198,7 @@ export default function ContactSection() {
               <motion.svg
                 width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden
                 style={{ flexShrink: 0, opacity: 0.45 }}
-                animate={{ rotate: [0, 360] }}
+                animate={reduce ? undefined : { rotate: [0, 360] }}
                 transition={{ duration: 12, ease: "linear", repeat: Infinity }}
               >
                 <circle cx="9" cy="9" r="7.5" stroke="#74a8ed" strokeWidth="1.2" />
@@ -219,24 +224,18 @@ export default function ContactSection() {
               className="inline-flex flex-col gap-2"
               style={{ fontSize: "clamp(13px, 1.5vw, 22px)", fontWeight: 500 }}
             >
-              <motion.div
-                className="flex justify-between gap-12"
-                initial={{ opacity: 0, x: -16 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.40 }}
-              >
-                <span style={{ color: "#000" }}>seg. – ter.</span>
-                <span style={{ color: "var(--blue-accent)" }}>08:30 – 17:30</span>
-              </motion.div>
-              <motion.div
-                className="flex justify-between gap-12"
-                initial={{ opacity: 0, x: -16 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.48 }}
-              >
-                <span style={{ color: "#000" }}>sexta-feira</span>
-                <span style={{ color: "var(--blue-accent)" }}>08:30 – 16:30</span>
-              </motion.div>
+              {horarios.map((h, i) => (
+                <motion.div
+                  key={h.dias}
+                  className="flex justify-between gap-12"
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={isInView ? { opacity: 1, x: 0 } : {}}
+                  transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.40 + i * 0.08 }}
+                >
+                  <span style={{ color: "#000" }}>{h.dias}</span>
+                  <span style={{ color: "var(--blue-accent)" }}>{h.horario}</span>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         </div>

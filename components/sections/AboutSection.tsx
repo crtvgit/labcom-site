@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView as useMotionInView } from "motion/react";
+import { motion, useInView as useMotionInView, useReducedMotion } from "motion/react";
+import { siteConfig } from "@/lib/siteConfig";
 
-const STATS = [
-  { value: "7+", label: "espaços disponíveis" },
-  { value: "200+", label: "reservas por semestre" },
-  { value: "6+", label: "cursos atendidos" },
-  { value: "4+", label: "estúdios de gravação" },
-];
+// Números editáveis em: lib/siteConfig.ts → numeros
+const STATS = siteConfig.numeros.map((n) => ({ value: n.valor, label: n.descricao }));
 
 /** Spring-physics counter — counts 0 → value when visible. */
 function AnimatedCounter({ value }: { value: string }) {
@@ -55,6 +52,7 @@ function AnimatedCounter({ value }: { value: string }) {
 export default function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useMotionInView(sectionRef, { once: true, margin: "-80px 0px" });
+  const reduce = useReducedMotion();
 
   return (
     <section
@@ -81,7 +79,7 @@ export default function AboutSection() {
           pointerEvents: "none",
           zIndex: 0,
         }}
-        animate={{ rotate: -360 }}
+        animate={reduce ? undefined : { rotate: -360 }}
         transition={{ duration: 60, ease: "linear", repeat: Infinity }}
       >
         <svg

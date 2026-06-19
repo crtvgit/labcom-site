@@ -4,9 +4,16 @@
 
 /* ── Design tokens ──────────────────────────────────────── */
 :root {
-  --blue-accent: #74a8ed;
+  /*
+   * --blue-accent / --gray-muted são escurecidos o suficiente para passar
+   * no contraste mínimo de acessibilidade (WCAG AA, 4.5:1) sobre o fundo
+   * claro. Os anéis decorativos usam um azul claro próprio (#74a8ed fixo no
+   * SVG), então continuam suaves — só o TEXTO ficou mais legível.
+   */
+  --blue-accent: #2f6fd1; /* azul de texto/realce — contraste AA */
+  --blue-accent-soft: #74a8ed; /* azul claro original — usos decorativos */
   --blue-light: #afc6e5;
-  --gray-muted: #9d9d9d;
+  --gray-muted: #6e6e6e; /* cinza de apoio — contraste AA */
   --border: #d0d0ce;
   --off-white: #fafaf8;
   --page-bg: #F7F6F2;
@@ -517,7 +524,7 @@ html {
 
 /* ── Anchor scroll offset — clears the fixed header (adapts via --header-h) ─ */
 #hero,
-#video,
+#destaque,
 #sobre,
 #espacos,
 #calendario,
@@ -934,108 +941,6 @@ button,
   touch-action: manipulation;
 }
 
-/* ── Calendar: desktop embed vs mobile link selector ──────── */
-.calendar-desktop-view {
-  display: block;
-}
-
-.calendar-mobile-selector {
-  display: none;
-}
-
-/* ── Calendar mobile selector components ────────────────────── */
-
-/* Tab strip */
-.cal-sel-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-}
-
-/* Individual selector tab */
-.cal-sel-tab-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  padding: 16px 8px;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gray-muted);
-  cursor: pointer;
-  font-family: inherit;
-  line-height: 1;
-  transition: color 0.18s, border-color 0.18s;
-}
-
-.cal-sel-tab-btn[aria-selected="true"] {
-  color: var(--blue-accent);
-  border-bottom-color: var(--blue-accent);
-  font-weight: 600;
-}
-
-/* Panel body below the tabs */
-.cal-sel-panel {
-  overflow: hidden;
-  background-color: var(--off-white);
-  background-image: var(--texture-url);
-  background-size: var(--texture-size) var(--texture-size);
-  background-repeat: repeat;
-  background-blend-mode: multiply;
-}
-
-/* Blue gradient accent stripe — mirrors ReservaContent */
-.cal-sel-stripe {
-  height: 3px;
-  background: linear-gradient(90deg, var(--blue-accent) 0%, var(--blue-light) 100%);
-}
-
-/* Centred content layout */
-.cal-sel-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 28px 24px 32px;
-  gap: 16px;
-}
-
-/* "Abrir calendário" CTA — mirrors ReservaContent's dark button */
-.cal-sel-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background-color: var(--near-black);
-  color: var(--off-white);
-  font-weight: 700;
-  font-size: 15px;
-  line-height: 1;
-  padding: 16px 28px;
-  border-radius: 4px;
-  text-decoration: none;
-  letter-spacing: 0.01em;
-  transition: opacity 0.2s;
-  margin-top: 4px;
-}
-
-.cal-sel-cta:active {
-  opacity: 0.72;
-}
-
-/* ── Calendar iframe wrapper ─────────────────────────────── */
-/*
- * Used by the desktop view only. Height stays as the original clamp value;
- * on mobile the entire desktop view is hidden, so no override needed.
- */
-.calendar-iframe-wrapper {
-  position: relative;
-  width: 100%;
-  height: clamp(480px, 55vw, 720px);
-  overflow: hidden;
-}
-
 /* ════════════════════════════════════════════════════════════
    MOBILE  ≤ 767 px
    ════════════════════════════════════════════════════════════ */
@@ -1106,10 +1011,12 @@ button,
     gap: 10px;
   }
 
-  /* All hero children leave absolute flow */
-  .hero-layout .hero-item {
+  /* All hero children leave absolute flow (direct wrap divs) */
+  .hero-layout > div {
     position: static !important;
     width: auto !important;
+    left: auto !important;
+    top: auto !important;
   }
 
   /* UCB text logo */
@@ -1151,21 +1058,6 @@ button,
   .resource-card-arrow {
     opacity: 1;
     transform: translateX(0);
-  }
-
-  /* ── Calendar — show mobile selector, hide desktop embed ─── */
-  /*
-   * The Outlook iframe is not touch-friendly on narrow screens.
-   * On mobile the entire desktop embed is replaced by a native-feeling
-   * selector that opens the chosen calendar in a new browser tab.
-   */
-  .calendar-desktop-view {
-    display: none;
-  }
-
-  .calendar-mobile-selector {
-    display: flex;
-    flex-direction: column;
   }
 
   /* ── Footer — auto height so copyright text wraps freely ─── */
@@ -1295,6 +1187,440 @@ button,
     background: none;
     -webkit-text-fill-color: initial;
     color: var(--near-black);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   AVISO DE RESERVAS BLOQUEADAS  (tarja vermelha — ReservationNotice)
+   Liga/desliga e texto em: lib/siteConfig.ts → avisoReservas
+   ════════════════════════════════════════════════════════════ */
+
+/*
+ * sticky logo abaixo do cabeçalho fixo (top = altura do header) para
+ * acompanhar a rolagem. z-index abaixo do header (100) e acima do conteúdo.
+ */
+.reserva-aviso {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 90;
+  overflow: hidden;
+  color: #fff;
+  /* Vermelho forte com leve gradiente — chama atenção sem ser estridente */
+  background: linear-gradient(180deg, #d64545 0%, #c43c3c 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 18px -8px rgba(196, 60, 60, 0.55);
+}
+
+/* Listra de "fita zebrada" no topo — reforça o caráter de alerta */
+.reserva-aviso::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.85) 0,
+    rgba(255, 255, 255, 0.85) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.reserva-aviso-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px clamp(1rem, 4vw, 48px);
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 16px);
+}
+
+.reserva-aviso-icon {
+  display: flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.reserva-aviso-texto {
+  margin: 0;
+  flex: 1;
+  font-size: clamp(13px, 1.4vw, 16px);
+  line-height: 1.35;
+  letter-spacing: 0.005em;
+}
+
+.reserva-aviso-titulo {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.reserva-aviso-msg {
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* ════════════════════════════════════════════════════════════
+   SEÇÃO DE DESTAQUE  (IntroSection — substitui o vídeo)
+   Texto e atalhos em: lib/siteConfig.ts → destaque
+   ════════════════════════════════════════════════════════════ */
+
+.intro-atalhos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 1.4vw, 16px);
+}
+
+.intro-atalho {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: clamp(16px, 1.8vw, 22px);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--page-bg);
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform    0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.22s ease;
+}
+
+.intro-atalho:hover {
+  border-color: var(--blue-accent);
+  background-color: var(--off-white);
+  transform: translateY(-3px);
+}
+
+.intro-atalho-icon {
+  display: flex;
+  color: var(--blue-accent);
+  margin-bottom: 2px;
+}
+
+.intro-atalho-titulo {
+  font-size: clamp(14px, 1.4vw, 17px);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #000;
+}
+
+.intro-atalho-desc {
+  font-size: clamp(11px, 0.95vw, 13px);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--gray-muted);
+  flex: 1;
+}
+
+.intro-atalho-seta {
+  font-size: clamp(14px, 1.3vw, 17px);
+  font-weight: 500;
+  color: var(--blue-accent);
+  align-self: flex-start;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity  0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.intro-atalho:hover .intro-atalho-seta {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ════════════════════════════════════════════════════════════
+   ESTADO BLOQUEADO DO FORMULÁRIO  (quando avisoReservas.ativo = true)
+   ════════════════════════════════════════════════════════════ */
+
+.reserva-bloqueada-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(196, 60, 60, 0.1);
+  border: 1px solid rgba(196, 60, 60, 0.35);
+  color: #b53a3a;
+  font-weight: 700;
+  font-size: clamp(12px, 1.2vw, 15px);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.reserva-bloqueada-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--gray-muted);
+  color: #fff;
+  font-weight: 700;
+  font-size: clamp(13px, 1.4vw, 18px);
+  line-height: 1;
+  padding: clamp(12px, 1.4vw, 18px) clamp(20px, 2.4vw, 32px);
+  border: none;
+  border-radius: 4px;
+  letter-spacing: 0.01em;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+/* ── Opções de reserva (salas / equipamentos) — dois cartões ── */
+.reserva-opcoes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(14px, 2vw, 24px);
+}
+
+.reserva-opcao {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--off-white);
+}
+
+.reserva-opcao-stripe {
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue-accent) 0%, var(--blue-light) 100%);
+}
+
+.reserva-opcao-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(12px, 1.6vw, 18px);
+  padding: clamp(26px, 3.4vw, 44px) clamp(20px, 3vw, 40px);
+}
+
+.reserva-opcao-titulo {
+  font-size: clamp(17px, 1.9vw, 24px);
+  font-weight: 700;
+  color: var(--blue-accent);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.reserva-opcao-desc {
+  font-size: clamp(12px, 1.1vw, 14px);
+  font-weight: 400;
+  color: var(--gray-muted);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 42ch;
+  flex: 1;
+}
+
+/* O botão "Abrir formulário" usa .btn-dark; aqui só damos cor e formato */
+.reserva-opcao-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  background-color: var(--near-black);
+  color: var(--off-white);
+  font-weight: 700;
+  font-size: clamp(13px, 1.4vw, 18px);
+  line-height: 1;
+  padding: clamp(12px, 1.4vw, 18px) clamp(20px, 2.4vw, 32px);
+  border-radius: 4px;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+/* ── Mobile: empilha atalhos e ajusta a tarja ── */
+@media (max-width: 767px) {
+  .intro-atalhos {
+    grid-template-columns: 1fr;
+  }
+
+  .reserva-opcoes {
+    grid-template-columns: 1fr;
+  }
+
+  .intro-atalho-seta {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .reserva-aviso-inner {
+    align-items: flex-start;
+    padding: 10px 16px;
+  }
+
+  .reserva-aviso-titulo {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-atalho:hover {
+    transform: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   ACESSIBILIDADE  (leitores de tela, teclado, foco)
+   ════════════════════════════════════════════════════════════ */
+
+/*
+ * .sr-only — texto visível apenas para leitores de tela.
+ * Usado para títulos, rótulos e avisos de "abre em nova aba".
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * Skip link — "Pular para o conteúdo". Fica escondido até receber foco
+ * pelo teclado (Tab), permitindo que usuários de teclado/leitor de tela
+ * pulem o cabeçalho e vão direto ao conteúdo.
+ */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 1000;
+  transform: translateY(-150%);
+  background: var(--near-black);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--blue-accent);
+  outline-offset: 2px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   CALENDÁRIOS — cartões de acesso (CalendarEmbed)
+   Conteúdo editável em: lib/siteConfig.ts → calendarios
+   ════════════════════════════════════════════════════════════ */
+
+.cal-cards-wrap {
+  padding: clamp(20px, 2.4vw, 32px);
+}
+
+.cal-cards-note {
+  margin: 0 0 clamp(16px, 2vw, 24px);
+  font-size: clamp(13px, 1.2vw, 15px);
+  line-height: 1.5;
+  color: var(--gray-muted);
+  max-width: 60ch;
+}
+
+.cal-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(12px, 1.6vw, 18px);
+  margin: 0;
+  padding: 0;
+}
+
+.cal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  height: 100%;
+  padding: clamp(20px, 2.2vw, 28px);
+  padding-top: clamp(24px, 2.6vw, 32px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--page-bg);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition:
+    border-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform    0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.22s ease;
+}
+
+.cal-card:hover {
+  border-color: var(--blue-accent);
+  background-color: var(--off-white);
+  transform: translateY(-3px);
+}
+
+.cal-card-stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue-accent) 0%, var(--blue-light) 100%);
+}
+
+.cal-card-icon {
+  display: flex;
+  line-height: 0;
+}
+
+.cal-card-title {
+  font-size: clamp(17px, 1.8vw, 22px);
+  font-weight: 700;
+  color: var(--blue-accent);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.cal-card-desc {
+  font-size: clamp(12px, 1.05vw, 14px);
+  font-weight: 400;
+  color: var(--gray-muted);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.cal-card-cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  font-size: clamp(13px, 1.2vw, 15px);
+  font-weight: 600;
+  color: var(--blue-accent);
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 767px) {
+  .cal-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cal-card:hover {
+    transform: none;
   }
 }
 

@@ -11,6 +11,7 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
+  useReducedMotion,
   Variants,
 } from "motion/react";
 
@@ -35,6 +36,7 @@ const itemVariants: Variants = {
 
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
 
   /* ── Mouse parallax for the geo ring ── */
   const rawX = useMotionValue(0.5);
@@ -61,13 +63,18 @@ export default function HeroSection() {
       ref={sectionRef}
       id="hero"
       aria-label="LAB.COM — Cabeçalho principal"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={reduce ? undefined : handleMouseMove}
+      onMouseLeave={reduce ? undefined : handleMouseLeave}
       style={{
         position: "relative",
         overflow: "hidden",
       }}
     >
+      {/* Título principal da página — visível para leitores de tela */}
+      <h1 className="sr-only">
+        LAB.COM — Laboratórios de Comunicação da Universidade Católica de Brasília
+      </h1>
+
       <div
         aria-hidden
         style={{
@@ -93,8 +100,8 @@ export default function HeroSection() {
           right: "clamp(-120px, -8vw, -20px)",
           top: "50%",
           translateY: "-50%",
-          x: springX,
-          y: springY,
+          x: reduce ? 0 : springX,
+          y: reduce ? 0 : springY,
           width: "clamp(180px, 38vw, 420px)",
           height: "clamp(180px, 38vw, 420px)",
           pointerEvents: "none",
@@ -112,7 +119,7 @@ export default function HeroSection() {
             display: "block",
             opacity: 0.16,
           }}
-          animate={{ rotate: 360 }}
+          animate={reduce ? undefined : { rotate: 360 }}
           transition={{ duration: 38, ease: "linear", repeat: Infinity }}
         >
           <circle cx="200" cy="200" r="197" stroke="#74a8ed" strokeWidth="1.5" />
@@ -143,7 +150,7 @@ export default function HeroSection() {
             height: "100%",
             display: "block",
           }}
-          animate={{ rotate: -360, opacity: [0.08, 0.18, 0.08] }}
+          animate={reduce ? { opacity: 0.12 } : { rotate: -360, opacity: [0.08, 0.18, 0.08] }}
           transition={{
             rotate: { duration: 28, ease: "linear", repeat: Infinity },
             opacity: { duration: 9, ease: "easeInOut", repeat: Infinity },
@@ -202,7 +209,7 @@ export default function HeroSection() {
           animate="visible"
           custom={2}
         >
-          <img src={HERO_WORDMARK} alt="LAB.COM" style={{ width: "100%", height: "auto", display: "block" }} />
+          <img src={HERO_WORDMARK} alt="" aria-hidden style={{ width: "100%", height: "auto", display: "block" }} />
         </motion.div>
 
         {/* Tagline */}
