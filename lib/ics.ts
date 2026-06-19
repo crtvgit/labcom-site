@@ -54,20 +54,57 @@ function unescapeText(v: string): string {
 }
 
 /**
+ * SEGURANÇA: remove o bloco de reunião do Microsoft Teams da descrição
+ * (link de ingresso, ID da reunião e SENHA). Esses dados nunca devem
+ * aparecer publicamente no site.
+ *
+ * O Outlook anexa esse bloco ao final da descrição, normalmente após uma
+ * linha de sublinhados ("____") e/ou o título "Reunião do Microsoft Teams".
+ * Cortamos a descrição no primeiro desses marcadores.
+ */
+function stripMeetingBlock(text: string): string {
+  const markers = [
+    /_{5,}/,                          // linha de sublinhados que delimita o bloco
+    /Reuni[aã]o do Microsoft Teams/i,
+    /Microsoft Teams meeting/i,
+    /teams\.microsoft\.com/i,
+    /Ingressar pelo computador/i,
+  ];
+  let cut = text.length;
+  for (const re of markers) {
+    const m = text.match(re);
+    if (m && m.index !== undefined && m.index < cut) cut = m.index;
+  }
+  let out = text.slice(0, cut);
+
+  // Rede de segurança: remove qualquer linha sensível que tenha sobrado.
+  out = out
+    .split("\n")
+    .filter(
+      (l) =>
+        !/(teams\.microsoft\.com|ID da Reuni|Meeting ID|Senha\s*:|Passcode|Ingressar\s*:|Op[cç][õo]es de reuni|Saiba mais sobre)/i.test(l)
+    )
+    .join("\n");
+
+  return out;
+}
+
+/**
  * Limpa a DESCRIPTION para exibição:
  *  - mantém as quebras de linha reais (\n)
+ *  - REMOVE o bloco de reunião do Teams (segurança)
  *  - remove a marcação "<mailto:...>" que o Outlook insere após menções
  *  - colapsa 3+ linhas em branco em no máximo 2
  */
 function cleanDescription(v: string): string {
-  return v
+  let s = v
     .replace(/\\n/gi, "\n")
     .replace(/\\,/g, ",")
     .replace(/\\;/g, ";")
-    .replace(/\\\\/g, "\\")
-    .replace(/<mailto:[^>]*>/gi, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+    .replace(/\\\\/g, "\\");
+  s = stripMeetingBlock(s);
+  s = s.replace(/<mailto:[^>]*>/gi, "");
+  return s.replace(/\n{3,}/g, "\n\n").trim();
 }
 
 /**
