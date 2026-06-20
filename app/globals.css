@@ -1696,9 +1696,11 @@ button,
 .cal2-weeks { width: 100%; }
 
 /* ── Semana: 7 colunas; linhas (número + faixas) definidas inline (uniforme) ── */
+/* min-height garante células com altura regular mesmo em meses vazios (ago.) */
 .cal2-week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-height: clamp(84px, 11vw, 112px);
 }
 
 /* Fundo clicável do dia (ocupa a altura inteira da semana) */

@@ -141,7 +141,7 @@ export const siteConfig = {
    *  🏫  ESPAÇOS  (os cartões da seção "nossos espaços")
    * ──────────────────────────────────────────────────────────────────────
    *  Para trocar a foto, coloque a imagem na pasta  public/espacos/
-   *  e escreva o caminho em "imagem" (ex.: "/espacos/radio.png").
+   *  e escreva o caminho em "imagem" (ex.: "/espacos/radio.jpg").
    */
   espacos: [
     {
@@ -149,28 +149,28 @@ export const siteConfig = {
       descricao:
         "Espaço equipado com iluminação profissional, cicloramas e câmeras DSLR",
       capacidade: "25",
-      imagem: "/espacos/fotografia.png",
+      imagem: "/espacos/fotografia.jpg",
     },
     {
       nome: "Estúdio de Rádio",
       descricao:
         "Espaço perfeito para gravações de podcast e mesacasts, contando com microfones profissionais, mesa de áudio e televisões.",
       capacidade: "10",
-      imagem: "/espacos/radio.png",
+      imagem: "/espacos/radio.jpg",
     },
     {
       nome: "CRTV",
       descricao:
         "Espaço equipado com ilhas de edição, dois estúdios com chroma key, câmeras e teleprompter",
       capacidade: "35",
-      imagem: "/espacos/crtv.png",
+      imagem: "/espacos/crtv.jpg",
     },
     {
       nome: "Laboratório de Com.",
       descricao:
         "Espaço equipado com computadores de informática preparados e com equipamentos para edição de foto e de vídeo.",
       capacidade: "40",
-      imagem: "/espacos/lab_com.png",
+      imagem: "/espacos/lab_com.jpg",
     },
   ],
 

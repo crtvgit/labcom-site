@@ -211,7 +211,9 @@ export default function CalendarEmbed() {
   const maxUsed = weekSegs.reduce((mx, segs) => Math.max(mx, ...segs.map((s) => s.lane + 1), 0), 0);
   const visibleLanes = Math.min(Math.max(maxUsed, 1), MAX_LANES);
   const hasOverflow = weekSegs.some((segs) => segs.some((s) => s.lane >= visibleLanes));
-  const rowsTemplate = `${NUM_ROW} repeat(${visibleLanes}, ${LANE_ROW})${hasOverflow ? ` ${OF_ROW}` : ""}`;
+  // A linha "1fr" no fim preenche a altura mínima da semana (cal2-week min-height),
+  // deixando as células com altura regular mesmo em meses com poucos eventos.
+  const rowsTemplate = `${NUM_ROW} repeat(${visibleLanes}, ${LANE_ROW})${hasOverflow ? ` ${OF_ROW}` : ""} 1fr`;
 
   const today = todayYmd();
   const selectedEvents = events

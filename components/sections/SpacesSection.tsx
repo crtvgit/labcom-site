@@ -83,6 +83,8 @@ function TiltCard({
           src={space.image || SPACE_CARD_BG}
           alt=""
           aria-hidden
+          loading="lazy"
+          decoding="async"
           className="space-card-image"
           style={{ scale: reduce ? 1 : imgScale }}
         />
