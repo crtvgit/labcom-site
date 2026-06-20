@@ -190,7 +190,7 @@ export default function SpacesSection() {
           <span> para seus projetos.</span>
         </motion.h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
           {SPACES.map((space, i) => (
             <TiltCard key={space.name} space={space} index={i} isInView={isInView} />
           ))}

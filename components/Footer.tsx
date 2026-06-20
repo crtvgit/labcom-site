@@ -31,6 +31,7 @@ export default function Footer() {
        */}
       <div
         aria-hidden
+        className="deco-mobile-hide"
         style={{
           position: "absolute",
           left: "50%",

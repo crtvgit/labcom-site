@@ -76,6 +76,7 @@ export default function CalendarSection() {
       {/* Floating ring bottom-left */}
       <motion.div
         aria-hidden
+        className="deco-mobile-hide"
         style={{
           position: "absolute",
           bottom: "-50px",

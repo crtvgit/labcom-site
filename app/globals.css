@@ -561,9 +561,22 @@ body {
   transform: translateY(-2px);
 }
 
-/* ── Smooth scroll ───────────────────────────────────────── */
-html {
-  scroll-behavior: smooth;
+/* ── Smooth scroll (desativado para quem prefere menos movimento) ── */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/*
+ * Decorações grandes (anéis girando) ficam ocultas no celular: no mobile elas
+ * apareciam cortadas e custavam CPU/bateria sem agregar. Continuam no
+ * tablet/desktop.
+ */
+@media (max-width: 600px) {
+  .deco-mobile-hide {
+    display: none !important;
+  }
 }
 
 /* ── Anchor scroll offset — clears the fixed header (adapts via --header-h) ─ */

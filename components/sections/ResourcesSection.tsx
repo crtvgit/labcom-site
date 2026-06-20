@@ -140,6 +140,7 @@ export default function ResourcesSection() {
       {/* Counter-rotating dashed rect — motion-driven */}
       <motion.div
         aria-hidden
+        className="deco-mobile-hide"
         style={{
           position: "absolute",
           bottom: "-40px",
@@ -169,6 +170,7 @@ export default function ResourcesSection() {
       {/* Second decoration — floating small ring top-left */}
       <motion.div
         aria-hidden
+        className="deco-mobile-hide"
         style={{
           position: "absolute",
           top: "-20px",

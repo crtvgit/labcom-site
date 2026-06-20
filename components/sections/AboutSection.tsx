@@ -69,6 +69,7 @@ export default function AboutSection() {
       {/* Concentric rings watermark — slow CCW spin */}
       <motion.div
         aria-hidden
+        className="deco-mobile-hide"
         style={{
           position: "absolute",
           right: "clamp(-160px, -12vw, -30px)",

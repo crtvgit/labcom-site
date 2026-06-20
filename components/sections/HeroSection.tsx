@@ -95,6 +95,7 @@ export default function HeroSection() {
        */}
       <motion.div
         aria-hidden
+        className="deco-mobile-hide"
         style={{
           position: "absolute",
           right: "clamp(-120px, -8vw, -20px)",

@@ -162,6 +162,7 @@ export default function ReservaContent() {
       {/* Rotating ring — top-left, partially clipped */}
       <motion.div
         aria-hidden
+        className="deco-mobile-hide"
         style={{ position: "absolute", left: -90, top: -90, width: 340, height: 340, pointerEvents: "none", zIndex: 0 }}
         animate={reduce ? undefined : { rotate: 360 }}
         transition={{ duration: 42, ease: "linear", repeat: Infinity }}
@@ -182,6 +183,7 @@ export default function ReservaContent() {
       {/* Second ring — bottom-right corner */}
       <motion.div
         aria-hidden
+        className="deco-mobile-hide"
         style={{ position: "absolute", right: -60, bottom: -60, width: 240, height: 240, pointerEvents: "none", zIndex: 0 }}
         animate={reduce ? undefined : { rotate: -360 }}
         transition={{ duration: 36, ease: "linear", repeat: Infinity }}

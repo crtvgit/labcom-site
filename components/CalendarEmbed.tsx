@@ -272,7 +272,11 @@ export default function CalendarEmbed() {
           </div>
 
           {/* Grade com swipe ao trocar calendário/mês */}
-          <div className="cal2-viewport">
+          <div
+            className="cal2-viewport"
+            role="grid"
+            aria-label={`Calendário ${activeCal.nome} — ${monthLabel(view.year, view.month)}`}
+          >
             <AnimatePresence mode="popLayout" initial={false} custom={dir}>
               <motion.div
                 key={`${activeKey}-${view.year}-${view.month}`}

@@ -54,6 +54,7 @@ export default function ContactSection() {
         {/* Animated ring — top-right corner, very slow orbit */}
         <motion.div
           aria-hidden
+          className="deco-mobile-hide"
           style={{
             position: "absolute",
             top: "-60px",
