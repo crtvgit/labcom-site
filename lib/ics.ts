@@ -65,10 +65,16 @@ function unescapeText(v: string): string {
 function stripMeetingBlock(text: string): string {
   const markers = [
     /_{5,}/,                          // linha de sublinhados que delimita o bloco
+    /-{10,}/,                         // alguns clientes usam hifens
     /Reuni[aã]o do Microsoft Teams/i,
     /Microsoft Teams meeting/i,
     /teams\.microsoft\.com/i,
+    /aka\.ms\/JoinTeamsMeeting/i,
     /Ingressar pelo computador/i,
+    /Ingressar na reuni[aã]o/i,
+    /Join the meeting now/i,
+    /ID da reuni[aã]o/i,              // se vier sem cabeçalho, corta aqui
+    /Meeting ID/i,
   ];
   let cut = text.length;
   for (const re of markers) {
@@ -77,12 +83,13 @@ function stripMeetingBlock(text: string): string {
   }
   let out = text.slice(0, cut);
 
-  // Rede de segurança: remove qualquer linha sensível que tenha sobrado.
+  // Rede de segurança: remove qualquer linha sensível que tenha sobrado
+  // (links de reunião, IDs, senhas), agora ou em eventos futuros.
   out = out
     .split("\n")
     .filter(
       (l) =>
-        !/(teams\.microsoft\.com|ID da Reuni|Meeting ID|Senha\s*:|Passcode|Ingressar\s*:|Op[cç][õo]es de reuni|Saiba mais sobre)/i.test(l)
+        !/(teams\.microsoft\.com|aka\.ms|ID da reuni|Meeting ID|C[oó]digo secreto|Senha\s*:|Passcode|Ingressar|Op[cç][õo]es de reuni|Saiba mais sobre|Baixar o Teams)/i.test(l)
     )
     .join("\n");
 

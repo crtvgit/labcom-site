@@ -1665,8 +1665,8 @@ button,
   margin-top: 10px;
 }
 
-/* ── Grade do mês ── */
-.cal2-grid {
+/* ── Cabeçalho dos dias da semana ── */
+.cal2-weekdays {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   border-top: 1px solid var(--border);
@@ -1674,7 +1674,7 @@ button,
 }
 
 .cal2-weekday {
-  padding: 8px 4px;
+  padding: 7px 4px;
   text-align: center;
   font-size: clamp(9px, 0.85vw, 11px);
   font-weight: 600;
@@ -1686,96 +1686,126 @@ button,
   border-bottom: 1px solid var(--border);
 }
 
-.cal2-cell {
+/* ── Viewport: recorta a animação de "swipe" ── */
+.cal2-viewport {
+  position: relative;
+  overflow: hidden;
+  border-left: 1px solid var(--border);
+}
+
+/* ── Semana: 7 colunas; linhas = número do dia + faixas de evento ── */
+.cal2-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: 2px;
+}
+
+/* Fundo clicável do dia (ocupa a altura inteira da semana) */
+.cal2-daycol {
   position: relative;
   min-width: 0;
-  min-height: clamp(56px, 6.5vw, 86px);
-  padding: 4px 5px 3px;
+  min-height: clamp(62px, 7vw, 94px);
+  padding: 0;
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   background: var(--off-white);
-  text-align: left;
   font-family: inherit;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
   transition: background-color 0.15s;
 }
 
-.cal2-cell-empty {
-  background: var(--page-bg);
-  cursor: default;
+.cal2-daycol-empty { background: var(--page-bg); cursor: default; }
+
+.cal2-daycol:not(.cal2-daycol-empty):hover {
+  background: color-mix(in srgb, var(--cal-accent) 6%, var(--off-white));
 }
 
-.cal2-cell:not(.cal2-cell-empty):hover {
-  background: color-mix(in srgb, var(--cal-accent) 7%, var(--off-white));
-}
-
-/* Anel de seleção animado (desliza/aparece ao escolher um dia) */
+/* Anel de seleção (aparece com mola ao escolher o dia) */
 .cal2-sel-ring {
   position: absolute;
   inset: 0;
   border: 2px solid var(--cal-accent);
   border-radius: 2px;
   pointer-events: none;
+  z-index: 4;
+}
+
+/* Número do dia (linha 1) */
+.cal2-daynum-wrap {
   z-index: 2;
+  pointer-events: none;
+  display: flex;
+  justify-content: flex-end;
+  padding: 3px 5px 0;
 }
 
 .cal2-daynum {
   font-size: clamp(11px, 1.1vw, 13px);
   font-weight: 600;
   color: var(--near-black);
-  width: 1.9em;
-  height: 1.9em;
+  width: 1.7em;
+  height: 1.7em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  flex-shrink: 0;
 }
 
-.cal2-today .cal2-daynum {
+.cal2-today .cal2-daynum { background: var(--cal-accent); color: #fff; }
+
+/* ── Barras de evento (vazam de um dia para o outro) ── */
+.cal2-evbar {
+  z-index: 3;
+  pointer-events: none;
+  margin: 0 2px;
+  height: clamp(15px, 1.7vw, 19px);
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  font-size: clamp(9px, 0.82vw, 11px);
+  line-height: 1;
+  overflow: hidden;
+  /* eventos de um dia só: pílula clara na cor do calendário */
+  background: color-mix(in srgb, var(--cal-accent) 15%, transparent);
+  color: var(--cal-accent);
+}
+
+/* eventos que se estendem por vários dias: barra cheia */
+.cal2-evbar-span {
   background: var(--cal-accent);
   color: #fff;
 }
 
-/* Chips de evento (desktop) */
-.cal2-chips {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
-}
-
-.cal2-chip {
-  font-size: clamp(9px, 0.8vw, 11px);
-  line-height: 1.3;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: rgba(47, 111, 209, 0.1);
-  background: color-mix(in srgb, var(--cal-accent) 12%, transparent);
-  color: var(--cal-accent);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.cal2-chip-time {
+/* AGENDA BLOQUEADA — vermelho listrado, bem visível */
+.cal2-evbar-blocked {
+  background: repeating-linear-gradient(45deg, #c0392b, #c0392b 7px, #a5302a 7px, #a5302a 14px);
+  color: #fff;
   font-weight: 700;
 }
 
-.cal2-more {
-  font-size: clamp(9px, 0.8vw, 10px);
-  font-weight: 600;
-  color: var(--gray-muted);
-  padding-left: 4px;
+/* cantos retos do lado em que a barra continua (sensação de "vazar") */
+.cal2-evbar-contl { margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.cal2-evbar-contr { margin-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+
+.cal2-evbar-label {
+  width: 100%;
+  padding: 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Ponto com contagem (mobile) */
-.cal2-dot {
-  display: none;
+.cal2-evbar-arrow { font-weight: 700; opacity: 0.85; }
+
+/* "+N" de excedente por dia */
+.cal2-more {
+  z-index: 2;
+  pointer-events: none;
+  align-self: start;
+  padding-left: 6px;
+  font-size: clamp(9px, 0.8vw, 10px);
+  font-weight: 700;
+  color: var(--gray-muted);
 }
 
 /* ── Reservas do dia ── */
@@ -1875,28 +1905,30 @@ button,
   white-space: pre-line;
 }
 
-/* ── Mobile: grade compacta com ponto de contagem ── */
+/* Reserva bloqueada no painel do dia — vermelho */
+.cal2-event-blocked {
+  border-color: #e3b3ad;
+  border-left-color: #c0392b;
+  background: color-mix(in srgb, #c0392b 6%, var(--page-bg));
+}
+.cal2-event-blocked .cal2-event-time { color: #b53a2f; }
+.cal2-event-tag-blocked {
+  color: #fff;
+  background: #c0392b;
+}
+
+/* ── Mobile: grade mais compacta (barras menores) ── */
 @media (max-width: 767px) {
-  .cal2-chips {
-    display: none;
+  .cal2-daycol {
+    min-height: 48px;
   }
-  .cal2-cell {
-    min-height: 52px;
-    align-items: center;
-    gap: 4px;
+  .cal2-daynum-wrap { padding: 2px 3px 0; }
+  .cal2-evbar {
+    height: 13px;
+    font-size: 8px;
+    margin: 0 1px;
+    border-radius: 3px;
   }
-  .cal2-dot {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
-    border-radius: 8px;
-    background: var(--cal-accent);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-  }
+  .cal2-evbar-label { padding: 0 3px; }
 }
 
