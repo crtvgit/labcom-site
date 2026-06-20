@@ -3,13 +3,14 @@
 /**
  * CalendarEmbed — calendário de reservas exibido DENTRO do site (inline).
  *
- *  - Abas para escolher o calendário (CRTV / Rádio / N.FOTO), cada uma com sua
- *    cor; trocar de calendário/mês faz uma transição em "swipe".
+ *  - Abas (CRTV / Rádio / N.FOTO), cada uma com sua cor; trocar de
+ *    calendário/mês faz uma transição em "swipe" (desliza).
  *  - Eventos vêm de /api/calendario/[chave], lido do Outlook NO SERVIDOR e
- *    SEMPRE AO VIVO (sem cache). Reatualiza ao focar a aba e por botão.
- *  - Eventos de VÁRIOS DIAS aparecem como BARRAS CONTÍNUAS que "vazam" de um
- *    dia para o outro até terminarem, sempre no topo de cada dia.
- *  - "AGENDA BLOQUEADA" aparece em vermelho, bem visível.
+ *    SEMPRE AO VIVO (sem cache de rede). Mantemos só uma cópia em memória para
+ *    a troca ser instantânea, mas SEMPRE rebuscamos a versão ao vivo.
+ *  - Eventos de vários dias / dia inteiro aparecem como BARRAS que "vazam"
+ *    de um dia para o outro, DENTRO das células, no topo de cada dia.
+ *  - "AGENDA BLOQUEADA" aparece em vermelho.
  *  - Mostra horário, local e descrição (sem o bloco de reunião do Teams).
  *
  * Calendários editáveis em: lib/siteConfig.ts → calendarios
@@ -24,7 +25,11 @@ const CALENDARS = siteConfig.calendarios;
 const TZ = "America/Sao_Paulo";
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const PALETTE = ["#2f6fd1", "#0f766e", "#b45309", "#7c3aed", "#be185d"];
-const MAX_LANES = 3; // faixas de evento visíveis por dia (o resto vira "+N")
+const MAX_LANES = 3;
+// Alturas das linhas da grade (responsivas)
+const NUM_ROW = "clamp(22px, 2.4vw, 30px)";
+const LANE_ROW = "clamp(18px, 1.9vw, 21px)";
+const OF_ROW = "clamp(13px, 1.5vw, 16px)";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -37,40 +42,28 @@ function brasilia(iso: string) {
   const p = Object.fromEntries(f.formatToParts(d).map((x) => [x.type, x.value]));
   return { ymd: `${p.year}-${p.month}-${p.day}`, hm: `${p.hour}:${p.minute}` };
 }
-
 function todayYmd(): string {
   const f = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
   const p = Object.fromEntries(f.formatToParts(new Date()).map((x) => [x.type, x.value]));
   return `${p.year}-${p.month}-${p.day}`;
 }
-
 function addDays(ymd: string, delta: number): string {
   const [y, m, d] = ymd.split("-").map(Number);
   const t = Date.UTC(y, m - 1, d) + delta * 86400000;
   const dt = new Date(t);
   return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
 }
-
-/** Primeiro e último dia (yyyy-mm-dd) que o evento ocupa. */
 function eventRange(ev: IcsEvent): { first: string; last: string } {
   const first = brasilia(ev.start).ymd;
   const end = brasilia(ev.end);
   let last = end.ymd;
-  if (ev.allDay || end.hm === "00:00") last = addDays(end.ymd, -1); // DTEND exclusivo
+  if (ev.allDay || end.hm === "00:00") last = addDays(end.ymd, -1);
   if (last < first) last = first;
   return { first, last };
 }
-
-function isMultiDay(ev: IcsEvent): boolean {
-  const { first, last } = eventRange(ev);
-  return first !== last;
-}
-function isSpanning(ev: IcsEvent): boolean {
-  return ev.allDay || isMultiDay(ev);
-}
-function isBlocked(ev: IcsEvent): boolean {
-  return /bloquead/i.test(ev.title);
-}
+function isMultiDay(ev: IcsEvent): boolean { const { first, last } = eventRange(ev); return first !== last; }
+function isSpanning(ev: IcsEvent): boolean { return ev.allDay || isMultiDay(ev); }
+function isBlocked(ev: IcsEvent): boolean { return /bloquead/i.test(ev.title); }
 
 function monthLabel(year: number, month: number): string {
   const d = new Date(Date.UTC(year, month - 1, 1));
@@ -92,17 +85,10 @@ function timeLabel(ev: IcsEvent): string {
   return `${fmt(s.ymd, s.hm)} → ${fmt(endYmd, e.hm)}`;
 }
 
-type Seg = {
-  ev: IcsEvent;
-  startCol: number;
-  endCol: number;
-  contLeft: boolean;
-  contRight: boolean;
-  lane: number;
-};
+type Seg = { ev: IcsEvent; startCol: number; endCol: number; contLeft: boolean; contRight: boolean; lane: number };
 
-/** Calcula as barras (segmentos) de uma semana e suas faixas (lanes). */
-function layoutWeek(weekDays: (string | null)[], events: IcsEvent[]) {
+/** Calcula os segmentos (barras) de uma semana e atribui faixas (sem limite). */
+function layoutWeek(weekDays: (string | null)[], events: IcsEvent[]): Seg[] {
   const segs: Seg[] = [];
   for (const ev of events) {
     const { first, last } = eventRange(ev);
@@ -120,18 +106,13 @@ function layoutWeek(weekDays: (string | null)[], events: IcsEvent[]) {
       lane: 0,
     });
   }
-
-  // Ordena: eventos que se estendem (vários dias / dia todo / bloqueio) primeiro
-  // (ficam nas faixas de cima), depois por coluna e horário.
+  // Eventos que se estendem primeiro (faixas de cima), depois por coluna/hora.
   segs.sort((a, b) => {
-    const sa = isSpanning(a.ev) ? 0 : 1;
-    const sb = isSpanning(b.ev) ? 0 : 1;
+    const sa = isSpanning(a.ev) ? 0 : 1, sb = isSpanning(b.ev) ? 0 : 1;
     if (sa !== sb) return sa - sb;
     if (a.startCol !== b.startCol) return a.startCol - b.startCol;
     return a.ev.start.localeCompare(b.ev.start);
   });
-
-  // Atribui faixas (greedy): primeira faixa livre sem sobreposição de colunas.
   const lanes: Seg[][] = [];
   for (const seg of segs) {
     let placed = false;
@@ -142,27 +123,23 @@ function layoutWeek(weekDays: (string | null)[], events: IcsEvent[]) {
     }
     if (!placed) { seg.lane = lanes.length; lanes.push([seg]); }
   }
-
-  // Conta o excedente por coluna (faixas além do limite viram "+N").
-  const overflow = new Array(7).fill(0);
-  for (const seg of segs) {
-    if (seg.lane >= MAX_LANES) {
-      for (let c = seg.startCol; c <= seg.endCol; c++) overflow[c]++;
-    }
-  }
-
-  return { visible: segs.filter((s) => s.lane < MAX_LANES), overflow };
+  return segs;
 }
 
 export default function CalendarEmbed() {
   const reduce = useReducedMotion();
 
   const [activeKey, setActiveKey] = useState<string>(CALENDARS[0].chave);
-  const [dir, setDir] = useState(1); // direção do swipe: 1 = →, -1 = ←
+  const [dir, setDir] = useState(1);
   const [events, setEvents] = useState<IcsEvent[]>([]);
-  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+
+  const cacheRef = useRef<Record<string, IcsEvent[]>>({});
+  const loadedRef = useRef<Set<string>>(new Set());
+  const latestKey = useRef(activeKey);
 
   const initialToday = todayYmd();
   const [view, setView] = useState(() => {
@@ -174,32 +151,41 @@ export default function CalendarEmbed() {
   const idx = Math.max(0, CALENDARS.findIndex((c) => c.chave === activeKey));
   const accent = PALETTE[idx % PALETTE.length];
   const activeCal = CALENDARS[idx];
-  const latestKey = useRef(activeKey);
 
-  const load = useCallback((key: string, silent = false) => {
+  /* Busca SEMPRE ao vivo; usa a cópia em memória apenas para evitar tela vazia. */
+  const load = useCallback((key: string, silent: boolean) => {
     if (silent) setRefreshing(true);
-    else { setStatus("loading"); setEvents([]); }
+    setError(false);
     fetch(`/api/calendario/${key}?t=${Date.now()}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((data: { events: IcsEvent[] }) => {
-        if (key !== latestKey.current) return;
-        setEvents(data.events || []); setStatus("ok"); setUpdatedAt(new Date());
+        cacheRef.current[key] = data.events || [];
+        loadedRef.current.add(key);
+        if (key === latestKey.current) { setEvents(data.events || []); setReady(true); setUpdatedAt(new Date()); }
       })
-      .catch(() => { if (key === latestKey.current && !silent) setStatus("error"); })
-      .finally(() => setRefreshing(false));
+      .catch(() => { if (key === latestKey.current && !cacheRef.current[key]) setError(true); })
+      .finally(() => { if (key === latestKey.current) setRefreshing(false); });
   }, []);
 
-  useEffect(() => { latestKey.current = activeKey; load(activeKey); }, [activeKey, load]);
+  useEffect(() => {
+    latestKey.current = activeKey;
+    load(activeKey, loadedRef.current.has(activeKey));
+  }, [activeKey, load]);
+
   useEffect(() => {
     const onFocus = () => load(latestKey.current, true);
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [load]);
 
-  /* Troca de calendário com direção de swipe baseada na ordem das abas. */
   const switchCalendar = (key: string) => {
+    if (key === activeKey) return;
     const newIdx = CALENDARS.findIndex((c) => c.chave === key);
     setDir(newIdx >= idx ? 1 : -1);
+    // Mostra a cópia em memória na hora (ou vazio) para o swipe acontecer.
+    const cached = cacheRef.current[key];
+    setEvents(cached || []);
+    setReady(loadedRef.current.has(key));
     setActiveKey(key);
   };
   const goMonth = (delta: number) => {
@@ -210,7 +196,7 @@ export default function CalendarEmbed() {
     });
   };
 
-  /* Monta as semanas do mês. */
+  /* Semanas do mês */
   const firstWeekday = new Date(Date.UTC(view.year, view.month - 1, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(view.year, view.month, 0)).getUTCDate();
   const cells: (string | null)[] = [];
@@ -220,9 +206,14 @@ export default function CalendarEmbed() {
   const weeks: (string | null)[][] = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
 
-  const today = todayYmd();
+  /* Layout uniforme: todas as semanas com a MESMA altura (sem buracos). */
+  const weekSegs = weeks.map((w) => layoutWeek(w, events));
+  const maxUsed = weekSegs.reduce((mx, segs) => Math.max(mx, ...segs.map((s) => s.lane + 1), 0), 0);
+  const visibleLanes = Math.min(Math.max(maxUsed, 1), MAX_LANES);
+  const hasOverflow = weekSegs.some((segs) => segs.some((s) => s.lane >= visibleLanes));
+  const rowsTemplate = `${NUM_ROW} repeat(${visibleLanes}, ${LANE_ROW})${hasOverflow ? ` ${OF_ROW}` : ""}`;
 
-  /* Eventos do dia selecionado (inclui multi-dia que passam por ele). */
+  const today = todayYmd();
   const selectedEvents = events
     .filter((ev) => { const { first, last } = eventRange(ev); return selectedDay >= first && selectedDay <= last; })
     .sort((a, b) => (isSpanning(b) ? 1 : 0) - (isSpanning(a) ? 1 : 0) || a.start.localeCompare(b.start));
@@ -230,17 +221,16 @@ export default function CalendarEmbed() {
   const swipe = reduce
     ? { initial: false as const, animate: {}, exit: {} }
     : {
-        initial: { x: dir > 0 ? "55%" : "-55%", opacity: 0 },
+        initial: { x: dir > 0 ? "100%" : "-100%", opacity: 0.4 },
         animate: { x: "0%", opacity: 1 },
-        exit: { x: dir > 0 ? "-55%" : "55%", opacity: 0 },
+        exit: { x: dir > 0 ? "-100%" : "100%", opacity: 0.4 },
       };
-
   const hover = reduce ? {} : { scale: 1.12 };
   const tap = reduce ? {} : { scale: 0.92 };
 
   return (
     <div className="cal2" style={{ ["--cal-accent" as string]: accent }}>
-      {/* ── Abas ── */}
+      {/* Abas */}
       <div role="tablist" aria-label="Selecione o calendário" className="cal2-tabs">
         {CALENDARS.map((cal) => (
           <button key={cal.chave} role="tab" aria-selected={activeKey === cal.chave} className="cal2-tab" onClick={() => switchCalendar(cal.chave)}>
@@ -249,7 +239,7 @@ export default function CalendarEmbed() {
         ))}
       </div>
 
-      {/* ── Barra compacta ── */}
+      {/* Barra compacta */}
       <div className="cal2-bar">
         <div className="cal2-bar-left">
           <motion.button className="cal2-navbtn" whileHover={hover} whileTap={tap} onClick={() => goMonth(-1)} aria-label="Mês anterior">‹</motion.button>
@@ -267,22 +257,19 @@ export default function CalendarEmbed() {
         </div>
       </div>
 
-      {status === "loading" && <div className="cal2-state" role="status">Carregando reservas…</div>}
-      {status === "error" && (
+      {error && !ready ? (
         <div className="cal2-state cal2-state-error" role="alert">
           Não foi possível carregar o calendário agora.{" "}
-          <button className="cal2-refresh" onClick={() => load(activeKey)}>Tentar de novo</button>
+          <button className="cal2-refresh" onClick={() => load(activeKey, false)}>Tentar de novo</button>
         </div>
-      )}
-
-      {status === "ok" && (
+      ) : (
         <>
           {/* Cabeçalho dos dias da semana */}
           <div className="cal2-weekdays" aria-hidden>
             {WEEKDAYS.map((w) => <div key={w} className="cal2-weekday">{w}</div>)}
           </div>
 
-          {/* Grade (com swipe ao trocar calendário/mês) */}
+          {/* Grade com swipe ao trocar calendário/mês */}
           <div className="cal2-viewport">
             <AnimatePresence mode="popLayout" initial={false} custom={dir}>
               <motion.div
@@ -291,137 +278,135 @@ export default function CalendarEmbed() {
                 initial={swipe.initial}
                 animate={swipe.animate}
                 exit={swipe.exit}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
               >
-                {weeks.map((weekDays, wi) => {
-                  const { visible, overflow } = layoutWeek(weekDays, events);
-                  return (
-                    <div className="cal2-week" key={wi}>
-                      {/* Fundo clicável: 1 coluna por dia, altura cheia da semana */}
-                      {weekDays.map((ymd, p) =>
-                        ymd ? (
-                          <button
-                            key={`bg${p}`}
-                            className={"cal2-daycol" + (ymd === today ? " cal2-today" : "") + (events.some(ev => { const r = eventRange(ev); return ymd >= r.first && ymd <= r.last; }) ? " cal2-has" : "")}
-                            style={{ gridColumn: p + 1, gridRow: "1 / -1" }}
-                            aria-pressed={ymd === selectedDay}
-                            aria-label={longDayLabel(ymd)}
-                            onClick={() => setSelectedDay(ymd)}
-                          >
-                            {ymd === selectedDay && (
-                              <motion.span
-                                className="cal2-sel-ring" aria-hidden
-                                initial={reduce ? false : { opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ type: "spring", stiffness: 520, damping: 30 }}
-                              />
-                            )}
-                          </button>
-                        ) : (
-                          <div key={`bg${p}`} className="cal2-daycol cal2-daycol-empty" style={{ gridColumn: p + 1, gridRow: "1 / -1" }} aria-hidden />
-                        )
-                      )}
+                {!ready ? (
+                  <div className="cal2-state" role="status">Carregando reservas…</div>
+                ) : (
+                  weeks.map((weekDays, wi) => {
+                    const segs = weekSegs[wi];
+                    const visible = segs.filter((s) => s.lane < visibleLanes);
+                    const overflow = new Array(7).fill(0);
+                    for (const s of segs) if (s.lane >= visibleLanes) for (let c = s.startCol; c <= s.endCol; c++) overflow[c]++;
 
-                      {/* Números dos dias (linha 1) */}
-                      {weekDays.map((ymd, p) =>
-                        ymd ? (
-                          <span key={`n${p}`} className="cal2-daynum-wrap" style={{ gridColumn: p + 1, gridRow: 1 }} aria-hidden>
-                            <span className="cal2-daynum">{Number(ymd.slice(8, 10))}</span>
-                          </span>
-                        ) : null
-                      )}
+                    return (
+                      <div className="cal2-week" key={wi} style={{ gridTemplateRows: rowsTemplate }}>
+                        {/* Fundo clicável de cada dia (altura cheia da semana) */}
+                        {weekDays.map((ymd, p) =>
+                          ymd ? (
+                            <button
+                              key={`bg${p}`}
+                              className={"cal2-daycol" + (ymd === today ? " cal2-today" : "")}
+                              style={{ gridColumn: p + 1, gridRow: "1 / -1" }}
+                              aria-pressed={ymd === selectedDay}
+                              aria-label={longDayLabel(ymd)}
+                              onClick={() => setSelectedDay(ymd)}
+                            >
+                              {ymd === selectedDay && (
+                                <motion.span className="cal2-sel-ring" aria-hidden
+                                  initial={reduce ? false : { opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ type: "spring", stiffness: 520, damping: 30 }} />
+                              )}
+                            </button>
+                          ) : (
+                            <div key={`bg${p}`} className="cal2-daycol cal2-daycol-empty" style={{ gridColumn: p + 1, gridRow: "1 / -1" }} aria-hidden />
+                          )
+                        )}
 
-                      {/* Barras de evento */}
-                      {visible.map((seg, si) => {
-                        const blocked = isBlocked(seg.ev);
-                        const showTime = !seg.contLeft && !seg.ev.allDay && !isMultiDay(seg.ev);
-                        return (
-                          <div
-                            key={`s${si}`}
-                            aria-hidden
-                            className={
-                              "cal2-evbar" +
-                              (blocked ? " cal2-evbar-blocked" : "") +
-                              (seg.contLeft ? " cal2-evbar-contl" : "") +
-                              (seg.contRight ? " cal2-evbar-contr" : "") +
-                              (isSpanning(seg.ev) ? " cal2-evbar-span" : "")
-                            }
-                            style={{ gridColumn: `${seg.startCol + 1} / ${seg.endCol + 2}`, gridRow: seg.lane + 2 }}
-                            title={seg.ev.title}
-                          >
-                            <span className="cal2-evbar-label">
-                              {seg.contLeft && <span className="cal2-evbar-arrow">‹ </span>}
-                              {showTime && <b>{brasilia(seg.ev.start).hm} </b>}
-                              {seg.ev.title}
-                              {seg.contRight && <span className="cal2-evbar-arrow"> ›</span>}
+                        {/* Números dos dias */}
+                        {weekDays.map((ymd, p) =>
+                          ymd ? (
+                            <span key={`n${p}`} className="cal2-daynum-wrap" style={{ gridColumn: p + 1, gridRow: 1 }} aria-hidden>
+                              <span className="cal2-daynum">{Number(ymd.slice(8, 10))}</span>
                             </span>
-                          </div>
-                        );
-                      })}
+                          ) : null
+                        )}
 
-                      {/* Excedente "+N" por coluna */}
-                      {overflow.map((n, p) =>
-                        n > 0 ? (
-                          <span key={`o${p}`} className="cal2-more" style={{ gridColumn: p + 1, gridRow: MAX_LANES + 2 }} aria-hidden>
-                            +{n}
-                          </span>
-                        ) : null
-                      )}
-                    </div>
-                  );
-                })}
+                        {/* Barras de evento */}
+                        {visible.map((seg, si) => {
+                          const blocked = isBlocked(seg.ev);
+                          const showTime = !seg.contLeft && !isSpanning(seg.ev);
+                          return (
+                            <div
+                              key={`s${si}`}
+                              aria-hidden
+                              className={"cal2-evbar" + (blocked ? " cal2-evbar-blocked" : "") + (seg.contLeft ? " cal2-evbar-contl" : "") + (seg.contRight ? " cal2-evbar-contr" : "")}
+                              style={{ gridColumn: `${seg.startCol + 1} / ${seg.endCol + 2}`, gridRow: seg.lane + 2 }}
+                              title={seg.ev.title}
+                            >
+                              <span className="cal2-evbar-label">
+                                {seg.contLeft && <span className="cal2-evbar-arrow">‹ </span>}
+                                {showTime && <b>{brasilia(seg.ev.start).hm} </b>}
+                                {seg.ev.title}
+                                {seg.contRight && <span className="cal2-evbar-arrow"> ›</span>}
+                              </span>
+                            </div>
+                          );
+                        })}
+
+                        {/* "+N" excedente por coluna */}
+                        {overflow.map((n, p) =>
+                          n > 0 ? (
+                            <span key={`o${p}`} className="cal2-more" style={{ gridColumn: p + 1, gridRow: visibleLanes + 2 }} aria-hidden>+{n}</span>
+                          ) : null
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
         </>
       )}
 
-      {/* ── Reservas do dia selecionado ── */}
-      {status === "ok" && (
-        <div className="cal2-day">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={selectedDay}
-              aria-live="polite"
-              initial={reduce ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduce ? {} : { opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <h3 className="cal2-day-title">{longDayLabel(selectedDay)}</h3>
-              {selectedEvents.length === 0 ? (
-                <p className="cal2-day-empty">Nenhuma reserva neste dia.</p>
-              ) : (
-                <ul className="cal2-day-list" role="list">
-                  {selectedEvents.map((ev, i) => (
-                    <li key={i} className={"cal2-event" + (isBlocked(ev) ? " cal2-event-blocked" : "")}>
-                      <div className="cal2-event-head">
-                        <span className="cal2-event-time">{timeLabel(ev)}</span>
-                        {isBlocked(ev) ? (
-                          <span className="cal2-event-tag cal2-event-tag-blocked">bloqueado</span>
-                        ) : isMultiDay(ev) ? (
-                          <span className="cal2-event-tag">vários dias</span>
-                        ) : null}
-                        <span className="cal2-event-title">{ev.title}</span>
-                      </div>
-                      {ev.location && (
-                        <p className="cal2-event-loc">
-                          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden focusable="false">
-                            <path d="M8 1.5c-2.8 0-5 2.2-5 5 0 3.4 5 8 5 8s5-4.6 5-8c0-2.8-2.2-5-5-5Z" stroke="currentColor" strokeWidth="1.2" />
-                            <circle cx="8" cy="6.5" r="1.7" stroke="currentColor" strokeWidth="1.2" />
-                          </svg>
-                          {ev.location}
-                        </p>
-                      )}
-                      {ev.description && <p className="cal2-event-desc">{ev.description}</p>}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      )}
+      {/* Reservas do dia selecionado */}
+      <div className="cal2-day">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedDay}
+            aria-live="polite"
+            initial={reduce ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? {} : { opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h3 className="cal2-day-title">{longDayLabel(selectedDay)}</h3>
+            {!ready ? (
+              <p className="cal2-day-empty">Carregando…</p>
+            ) : selectedEvents.length === 0 ? (
+              <p className="cal2-day-empty">Nenhuma reserva neste dia.</p>
+            ) : (
+              <ul className="cal2-day-list" role="list">
+                {selectedEvents.map((ev, i) => (
+                  <li key={i} className={"cal2-event" + (isBlocked(ev) ? " cal2-event-blocked" : "")}>
+                    <div className="cal2-event-head">
+                      <span className="cal2-event-time">{timeLabel(ev)}</span>
+                      {isBlocked(ev) ? (
+                        <span className="cal2-event-tag cal2-event-tag-blocked">bloqueado</span>
+                      ) : isMultiDay(ev) ? (
+                        <span className="cal2-event-tag">vários dias</span>
+                      ) : null}
+                      <span className="cal2-event-title">{ev.title}</span>
+                    </div>
+                    {ev.location && (
+                      <p className="cal2-event-loc">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden focusable="false">
+                          <path d="M8 1.5c-2.8 0-5 2.2-5 5 0 3.4 5 8 5 8s5-4.6 5-8c0-2.8-2.2-5-5-5Z" stroke="currentColor" strokeWidth="1.2" />
+                          <circle cx="8" cy="6.5" r="1.7" stroke="currentColor" strokeWidth="1.2" />
+                        </svg>
+                        {ev.location}
+                      </p>
+                    )}
+                    {ev.description && <p className="cal2-event-desc">{ev.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

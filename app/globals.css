@@ -1693,18 +1693,18 @@ button,
   border-left: 1px solid var(--border);
 }
 
-/* ── Semana: 7 colunas; linhas = número do dia + faixas de evento ── */
+.cal2-weeks { width: 100%; }
+
+/* ── Semana: 7 colunas; linhas (número + faixas) definidas inline (uniforme) ── */
 .cal2-week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  row-gap: 2px;
 }
 
 /* Fundo clicável do dia (ocupa a altura inteira da semana) */
 .cal2-daycol {
   position: relative;
   min-width: 0;
-  min-height: clamp(62px, 7vw, 94px);
   padding: 0;
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -1753,27 +1753,21 @@ button,
 
 .cal2-today .cal2-daynum { background: var(--cal-accent); color: #fff; }
 
-/* ── Barras de evento (vazam de um dia para o outro) ── */
+/* ── Barras de evento (vazam de um dia para o outro, dentro da célula) ── */
+/* Todos os eventos — de um dia ou de vários — usam a MESMA cor (pílula clara). */
 .cal2-evbar {
   z-index: 3;
   pointer-events: none;
-  margin: 0 2px;
-  height: clamp(15px, 1.7vw, 19px);
+  align-self: stretch;
+  margin: 1.5px 2px;
   display: flex;
   align-items: center;
   border-radius: 4px;
   font-size: clamp(9px, 0.82vw, 11px);
   line-height: 1;
   overflow: hidden;
-  /* eventos de um dia só: pílula clara na cor do calendário */
-  background: color-mix(in srgb, var(--cal-accent) 15%, transparent);
+  background: color-mix(in srgb, var(--cal-accent) 16%, transparent);
   color: var(--cal-accent);
-}
-
-/* eventos que se estendem por vários dias: barra cheia */
-.cal2-evbar-span {
-  background: var(--cal-accent);
-  color: #fff;
 }
 
 /* AGENDA BLOQUEADA — vermelho listrado, bem visível */
@@ -1924,9 +1918,8 @@ button,
   }
   .cal2-daynum-wrap { padding: 2px 3px 0; }
   .cal2-evbar {
-    height: 13px;
     font-size: 8px;
-    margin: 0 1px;
+    margin: 1px;
     border-radius: 3px;
   }
   .cal2-evbar-label { padding: 0 3px; }
