@@ -20,10 +20,9 @@ export default function ContactSection() {
     >
       <div
         ref={sectionRef}
+        className="site-gutter"
         style={{
           position: "relative",
-          marginLeft: "clamp(1rem, 12.8vw, 164px)",
-          marginRight: "clamp(1rem, 12.7vw, 162px)",
           border: "1px solid var(--border)",
           borderBottom: "none",
           backgroundColor: "var(--off-white)",

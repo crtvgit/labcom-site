@@ -25,10 +25,9 @@ export default function HomePage() {
         <div style={{ position: "relative", zIndex: 1 }}>
 
           {/*
-           * ── Hero & Video Group (with Triangle Background) ──
-           * The triangle sits inside this relative wrapper, filling the space
-           * from the top down to just after the Video section, perfectly cutting off
-           * before the About section starts.
+           * ── Hero & Intro Group (with Polygon Background) ──
+           * The polygon sits inside this relative wrapper, filling the space
+           * from the top down to just after the Intro section.
            */}
           <div style={{ position: "relative" }}>
             {/* Polygon Background (Right side, right trapezoid) */}
@@ -51,20 +50,8 @@ export default function HomePage() {
                 pointerEvents: "none",
               }}
             />
-            <div
-              style={{
-                position: "relative",
-                maxWidth: 1280,
-                marginLeft: "auto",
-                marginRight: "auto",
-              }}
-            >
-              <div
-                style={{
-                  marginLeft: "clamp(1rem, 12.8vw, 164px)",
-                  marginRight: "clamp(1rem, 12.7vw, 162px)",
-                }}
-              >
+            <div className="site-shell" style={{ position: "relative" }}>
+              <div className="site-gutter">
                 <HeroSection />
                 <IntroSection />
               </div>
@@ -74,41 +61,18 @@ export default function HomePage() {
           {/*
            * ── About → Spaces → Resources ──
            */}
-          <div
-            style={{
-              position: "relative",
-              zIndex: 1, // Lifts the sections ABOVE the subsequent -46px margined Blue zone so they aren't visually cut off
-              maxWidth: 1280,
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            <div
-              style={{
-                marginLeft: "clamp(1rem, 12.8vw, 164px)",
-                marginRight: "clamp(1rem, 12.7vw, 162px)",
-              }}
-            >
+          <div className="site-shell" style={{ position: "relative", zIndex: 1 }}>
+            <div className="site-gutter">
               <AboutSpacesGroup />
               <ResourcesSection />
             </div>
           </div>
 
           {/*
-           * ── Blue zone (Figma: Contact group's Blue_Background) ──
-           *
+           * ── Blue zone (Contact group's Blue_Background) ──
            * Full viewport width — intentionally NOT wrapped in maxWidth.
-           *
-           * Figma coordinates (Desktop frame 1280 × 3575 px):
-           *   Blue_Background : x=0, y=2100, w=1280, h=936
-           *   SpacesSection   : About group ends at y=2146 → blue overlaps Spaces by 46 px
-           *   CalendarSection : starts at y=2202 → 102 px below blue top
-           *
-           *   marginTop : -46 px — blue starts 46 px behind SpacesSection bottom
-           *   paddingTop : 102 px — Calendar begins 102 px from blue top
-           *   visible gap (blue visible between Spaces bottom and Calendar) = 102 − 46 = 56 px ✓
-           *
-           * zIndex:0 keeps the blue behind the upper sections block (zIndex:1).
+           * marginTop:-46px lets the blue start behind the Spaces bottom;
+           * paddingTop creates the visible gap before the Calendar.
            */}
           <div
             style={{
@@ -124,50 +88,22 @@ export default function HomePage() {
               paddingBottom: "clamp(24px, 5.4vw, 69px)",
             }}
           >
-            <div
-              style={{
-                maxWidth: 1280,
-                marginLeft: "auto",
-                marginRight: "auto",
-              }}
-            >
-              <div
-                style={{
-                  marginLeft: "clamp(1rem, 12.8vw, 164px)",
-                  marginRight: "clamp(1rem, 12.7vw, 162px)",
-                }}
-              >
+            <div className="site-shell">
+              <div className="site-gutter">
                 <CalendarSection />
               </div>
             </div>
           </div>
 
           {/* ── Reservation form section — directly below the blue zone ── */}
-          <div
-            style={{
-              maxWidth: 1280,
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            <div
-              style={{
-                marginLeft: "clamp(1rem, 12.8vw, 164px)",
-                marginRight: "clamp(1rem, 12.7vw, 162px)",
-              }}
-            >
+          <div className="site-shell">
+            <div className="site-gutter">
               <ReservaContent />
             </div>
           </div>
 
           {/* ── Contact section — paper box below reservation ── */}
-          <div
-            style={{
-              maxWidth: 1280,
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
+          <div className="site-shell">
             <ContactSection />
           </div>
 

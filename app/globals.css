@@ -42,12 +42,19 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--page-bg);
+  /*
+   * Trava a rolagem horizontal (impede "arrastar" para o lado e ver espaço
+   * em branco no mobile). `clip` não cria um contêiner de rolagem — então não
+   * quebra position: sticky; `hidden` fica de reserva para navegadores antigos.
+   */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
   font-family: var(--font-hanken), "Hanken Grotesk", sans-serif;
   color: #000;
-  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* ── Page texture ────────────────────────────────────────── */
@@ -121,6 +128,43 @@ body {
 .content-inner {
   padding-left: clamp(0.5rem, 2vw, 50px);
   padding-right: clamp(0.5rem, 2vw, 50px);
+}
+
+/* ════════════════════════════════════════════════════════════
+   SISTEMA DE CONTÊINER RESPONSIVO  (gutters por dispositivo)
+   ────────────────────────────────────────────────────────────
+   .site-shell  → centraliza o conteúdo (máx. 1280px)
+   .site-gutter → margens laterais que se adaptam:
+        celular  : 16px      (conteúdo amplo)
+        tablet   : ~7–13vw
+        desktop  : até 164px (idêntico ao layout original)
+   ════════════════════════════════════════════════════════════ */
+.site-shell {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Celular primeiro: margens pequenas para o conteúdo respirar */
+.site-gutter {
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+/* Tablet / telas médias */
+@media (min-width: 601px) {
+  .site-gutter {
+    margin-left: clamp(28px, 13vw, 150px);
+    margin-right: clamp(28px, 13vw, 150px);
+  }
+}
+
+/* Desktop: preserva exatamente o gutter original (164px em 1280px) */
+@media (min-width: 1024px) {
+  .site-gutter {
+    margin-left: clamp(96px, 12.8vw, 164px);
+    margin-right: clamp(96px, 12.7vw, 162px);
+  }
 }
 
 /* ── Header ──────────────────────────────────────────────── */

@@ -22,19 +22,8 @@ export default function ReservaPage() {
         <NotebookBackground />
 
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div
-            style={{
-              maxWidth: 1280,
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            <div
-              style={{
-                marginLeft: "clamp(1rem, 12.8vw, 164px)",
-                marginRight: "clamp(1rem, 12.7vw, 162px)",
-              }}
-            >
+          <div className="site-shell">
+            <div className="site-gutter">
               {/* ── Booking form section (animated client component) ── */}
               <ReservaContent />
             </div>
